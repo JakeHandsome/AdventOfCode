@@ -11,6 +11,7 @@ where
     fs::read_to_string(input).unwrap()
 }
 
+
 pub fn read_input_as_lines<P>(input: P) -> io::Result<Lines<BufReader<File>>>
 where
     P: AsRef<Path>,
@@ -20,6 +21,7 @@ where
     Ok(reader.lines())
 }
 
+/// Macro for some boiler plate code to read in the Input.txt file for the given package
 #[macro_export]
 macro_rules! read_input_file_for_project {
     () => {
