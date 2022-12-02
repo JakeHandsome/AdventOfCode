@@ -69,8 +69,8 @@ fn download_file_if_doesnt_exist(input: &Path) -> Result<(), Box<dyn Error>> {
             .ok_or_else(|| Box::new(DownloadError::new(YEAR_ERR_MESSAGE)))?
             .to_str()
             .ok_or_else(|| Box::new(DownloadError::new(YEAR_ERR_MESSAGE)))?;
-        let day = day[day.len() - 2..].parse::<usize>()?;
-        let year = year[year.len() - 4..].parse::<usize>()?;
+        let day = &day[day.len() - 2..].parse::<usize>()?;
+        let year = &year[year.len() - 4..];
         // Session token to come from envvar
         let session = env::var("AOC_SESSION")?;
         let client = reqwest::blocking::Client::new();
