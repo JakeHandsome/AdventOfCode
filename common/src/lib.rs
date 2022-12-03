@@ -95,3 +95,9 @@ macro_rules! read_input_file_for_project {
             .expect("Failed to load input file")
     };
 }
+#[macro_export]
+macro_rules! read_input_file_for_project_as_string {
+    () => {
+        common::read_input_as_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("Input.txt"))
+    };
+}
