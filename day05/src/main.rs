@@ -5,7 +5,7 @@ fn main() {
     println!("{}", part2(&input));
 }
 
-fn part1(input: &String) -> String {
+fn part1(input: &str) -> String {
     let mut iter = input.lines();
     let mut top_input = "".to_string();
     for line in iter.by_ref() {
@@ -31,7 +31,7 @@ fn part1(input: &String) -> String {
     state.iter().map(|x| x.last().unwrap()).collect()
 }
 
-fn part2(input: &String) -> String {
+fn part2(input: &str) -> String {
     let mut iter = input.lines();
     let mut top_input = "".to_string();
     for line in iter.by_ref() {
