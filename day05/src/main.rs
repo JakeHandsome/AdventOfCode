@@ -1,29 +1,21 @@
 use common::read_input_file_for_project_as_string;
+use std::{collections::VecDeque, error::Error, str::Lines, vec};
+
+type ResultErr = Box<dyn Error>;
+
 fn main() {
     let input = read_input_file_for_project_as_string!();
-    println!("{}", part1(&input));
-    println!("{}", part2(&input));
+    println!("Part1: {:#?}", part1(&input));
+    println!("Part2: {:#?}", part2(&input));
 }
 
-fn part1(input: &str) -> String {
+fn part1(input: &str) -> Result<String, ResultErr> {
     let mut iter = input.lines();
-    let mut top_input = "".to_string();
-    for line in iter.by_ref() {
-        if line.is_empty() {
-            // remove final new line
-            top_input.remove(top_input.len() - 1usize);
-            break;
-        }
-        top_input += line;
-        top_input += "\n";
-    }
+    let top_input = get_top_input(&mut iter);
     let mut state = parse_initial_state(top_input);
     for line in iter {
         // Parse out the quant,start and dest
-        let mut split = line.split(' ');
-        let quantity = split.nth(1).unwrap().parse::<usize>().unwrap();
-        let start = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
-        let dest = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
+        let (quantity, start, dest) = parse_instruction(line)?;
         for _ in 0..quantity {
             // Pop from the start and push to the end
             let intermediate = state[start].pop().unwrap();
@@ -31,11 +23,28 @@ fn part1(input: &str) -> String {
         }
     }
     // convert char array into String
-    state.iter().map(|x| x.last().unwrap()).collect()
+    Ok(state.iter().map(|x| x.last().unwrap()).collect())
 }
 
-fn part2(input: &str) -> String {
+fn part2(input: &str) -> Result<String, ResultErr> {
     let mut iter = input.lines();
+    let top_input = get_top_input(&mut iter);
+    let mut state = parse_initial_state(top_input);
+    for line in iter {
+        let mut intermediate: VecDeque<char> = VecDeque::new();
+        let (quantity, start, dest) = parse_instruction(line)?;
+        for _ in 0..quantity {
+            // pop to an intermediate vec_deque in the front to reverse the order
+            intermediate.push_front(state[start].pop().unwrap());
+        }
+        // add each element
+        for a in intermediate {
+            state[dest].push(a);
+        }
+    }
+    Ok(state.iter().map(|x| x.last().unwrap()).collect())
+}
+fn get_top_input(iter: &mut Lines) -> String {
     let mut top_input = "".to_string();
     for line in iter.by_ref() {
         if line.is_empty() {
@@ -46,34 +55,26 @@ fn part2(input: &str) -> String {
         top_input += line;
         top_input += "\n";
     }
-    let mut state = parse_initial_state(top_input);
-    for line in iter {
-        let mut split = line.split(' ');
-        let quantity = split.nth(1).unwrap().parse::<usize>().unwrap();
-        let start = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
-        let dest = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
-        let mut intermediate = vec![];
-        for _ in 0..quantity {
-            // pop to an intermediate vec
-            intermediate.push(state[start].pop().unwrap());
-        }
-        // reverse the vec so it goes in the opposite order
-        intermediate.reverse();
-        // add each element
-        for a in intermediate {
-            state[dest].push(a);
-        }
-    }
-    state.iter().map(|x| x.last().unwrap()).collect()
+    top_input
 }
+
+fn parse_instruction(instruction: &str) -> Result<(usize, usize, usize), ResultErr> {
+    let mut split = instruction.split(' ');
+    let quantity = split.nth(1).unwrap().parse::<usize>()?;
+    let start = split.nth(1).unwrap().parse::<usize>()? - 1;
+    let dest = split.nth(1).unwrap().parse::<usize>()? - 1;
+    Ok((quantity, start, dest))
+}
+
 fn parse_initial_state(top_input: String) -> Vec<Vec<char>> {
-    let mut iter = top_input.lines().peekable();
-    // Determine width to know how many vecs to create
+    let mut iter = top_input.lines().rev().peekable();
     let line = iter.peek().unwrap();
     let width = (line.len() + 1) / 4;
+    // Reverse so we read from the bottom of the stack to the top
+    // Determine width to know how many vecs to create
     let mut initial_state = vec![vec![]; width];
     for line in iter {
-        // If the line has [ its the last line and we can ignore
+        // If the line doesn't have [ its the index and can be ignored
         if !line.contains('[') {
             continue;
         }
@@ -87,15 +88,11 @@ fn parse_initial_state(top_input: String) -> Vec<Vec<char>> {
             }
         }
     }
-    for stack in &mut initial_state {
-        // flip the stacks so they are in the correct order
-        stack.reverse();
-    }
     initial_state
 }
 
 #[cfg(test)]
-mod tests {
+mod day5_tests {
     use super::*;
     const SAMPLE: &str = r#"    [D]    
 [N] [C]    
@@ -108,10 +105,10 @@ move 2 from 2 to 1
 move 1 from 1 to 2"#;
     #[test]
     fn p1_test() {
-        assert_eq!(part1(&(SAMPLE).to_string()), "CMZ")
+        assert_eq!(part1(SAMPLE).unwrap(), "CMZ")
     }
     #[test]
     fn p2_test() {
-        assert_eq!(part2(&(SAMPLE).to_string()), "MCD")
+        assert_eq!(part2(SAMPLE).unwrap(), "MCD")
     }
 }

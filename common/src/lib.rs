@@ -31,22 +31,22 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct DownloadError(String);
+pub struct AdventOfCodeError(String);
 const DAY_ERR_MESSAGE: &str = "Day folder not in correct format. Folder should end with 2 digits for the date Ex: 01";
 const YEAR_ERR_MESSAGE: &str =
     "Year folder not in correct format. Folder should end with 4 digits for the Year Ex: 2022";
-impl std::fmt::Display for DownloadError {
+impl std::fmt::Display for AdventOfCodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
-impl Error for DownloadError {}
-impl DownloadError {
-    fn new<S>(s: S) -> DownloadError
+impl Error for AdventOfCodeError {}
+impl AdventOfCodeError {
+    fn new<S>(s: S) -> AdventOfCodeError
     where
         S: Into<String>,
     {
-        DownloadError(s.into())
+        AdventOfCodeError(s.into())
     }
 }
 
@@ -61,14 +61,14 @@ fn download_file_if_doesnt_exist(input: &Path) -> Result<(), Box<dyn Error>> {
         let _ = it.next(); // This is the file name it can be ignored
         let day = it
             .next()
-            .ok_or_else(|| Box::new(DownloadError::new(DAY_ERR_MESSAGE)))?
+            .ok_or_else(|| Box::new(AdventOfCodeError::new(DAY_ERR_MESSAGE)))?
             .to_str()
-            .ok_or_else(|| Box::new(DownloadError::new(DAY_ERR_MESSAGE)))?; //This is the folder with the day in the form (day##)
+            .ok_or_else(|| Box::new(AdventOfCodeError::new(DAY_ERR_MESSAGE)))?; //This is the folder with the day in the form (day##)
         let year = it
             .next()
-            .ok_or_else(|| Box::new(DownloadError::new(YEAR_ERR_MESSAGE)))?
+            .ok_or_else(|| Box::new(AdventOfCodeError::new(YEAR_ERR_MESSAGE)))?
             .to_str()
-            .ok_or_else(|| Box::new(DownloadError::new(YEAR_ERR_MESSAGE)))?;
+            .ok_or_else(|| Box::new(AdventOfCodeError::new(YEAR_ERR_MESSAGE)))?;
         let day = &day[day.len() - 2..].parse::<usize>()?;
         let year = &year[year.len() - 4..];
         // Session token to come from envvar
@@ -81,7 +81,7 @@ fn download_file_if_doesnt_exist(input: &Path) -> Result<(), Box<dyn Error>> {
         fs::write(input, res.text()?)?;
         Ok(())
     } else {
-        Err(Box::new(DownloadError::new(
+        Err(Box::new(AdventOfCodeError::new(
             "Cannot download files other than 'Input.txt'",
         )))
     }
