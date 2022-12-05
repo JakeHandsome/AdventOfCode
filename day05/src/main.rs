@@ -19,15 +19,18 @@ fn part1(input: &str) -> String {
     }
     let mut state = parse_initial_state(top_input);
     for line in iter {
+        // Parse out the quant,start and dest
         let mut split = line.split(' ');
         let quantity = split.nth(1).unwrap().parse::<usize>().unwrap();
         let start = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
         let dest = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
         for _ in 0..quantity {
+            // Pop from the start and push to the end
             let intermediate = state[start].pop().unwrap();
             state[dest].push(intermediate);
         }
     }
+    // convert char array into String
     state.iter().map(|x| x.last().unwrap()).collect()
 }
 
@@ -51,9 +54,12 @@ fn part2(input: &str) -> String {
         let dest = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
         let mut intermediate = vec![];
         for _ in 0..quantity {
+            // pop to an intermediate vec
             intermediate.push(state[start].pop().unwrap());
         }
+        // reverse the vec so it goes in the opposite order
         intermediate.reverse();
+        // add each element
         for a in intermediate {
             state[dest].push(a);
         }
@@ -62,23 +68,27 @@ fn part2(input: &str) -> String {
 }
 fn parse_initial_state(top_input: String) -> Vec<Vec<char>> {
     let mut iter = top_input.lines().peekable();
+    // Determine width to know how many vecs to create
     let line = iter.peek().unwrap();
     let width = (line.len() + 1) / 4;
-    println!("width = {}", width);
     let mut initial_state = vec![vec![]; width];
     for line in iter {
+        // If the line has [ its the last line and we can ignore
         if !line.contains('[') {
             continue;
         }
+        // Add an extra space so we can use chunk size of 4
         let line = line.to_owned() + " ";
         let chars: Vec<_> = line.chars().collect();
         for (index, a) in chars.chunks(4).enumerate() {
+            // If we grab 4 chunks index 1 will always be the letter
             if a[1] != ' ' {
                 initial_state[index].push(a[1]);
             }
         }
     }
     for stack in &mut initial_state {
+        // flip the stacks so they are in the correct order
         stack.reverse();
     }
     initial_state
