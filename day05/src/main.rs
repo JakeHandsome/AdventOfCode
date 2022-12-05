@@ -8,7 +8,7 @@ fn main() {
 fn part1(input: &String) -> String {
     let mut iter = input.lines();
     let mut top_input = "".to_string();
-    while let Some(line) = iter.next() {
+    for line in iter.by_ref() {
         if line.is_empty() {
             // remove final new line
             top_input.remove(top_input.len() - 1usize);
@@ -18,8 +18,8 @@ fn part1(input: &String) -> String {
         top_input += "\n";
     }
     let mut state = parse_initial_state(top_input);
-    while let Some(line) = iter.next() {
-        let mut split = line.split(" ");
+    for line in iter {
+        let mut split = line.split(' ');
         let quantity = split.nth(1).unwrap().parse::<usize>().unwrap();
         let start = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
         let dest = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
@@ -34,7 +34,7 @@ fn part1(input: &String) -> String {
 fn part2(input: &String) -> String {
     let mut iter = input.lines();
     let mut top_input = "".to_string();
-    while let Some(line) = iter.next() {
+    for line in iter.by_ref() {
         if line.is_empty() {
             // remove final new line
             top_input.remove(top_input.len() - 1usize);
@@ -44,8 +44,8 @@ fn part2(input: &String) -> String {
         top_input += "\n";
     }
     let mut state = parse_initial_state(top_input);
-    while let Some(line) = iter.next() {
-        let mut split = line.split(" ");
+    for line in iter {
+        let mut split = line.split(' ');
         let quantity = split.nth(1).unwrap().parse::<usize>().unwrap();
         let start = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
         let dest = split.nth(1).unwrap().parse::<usize>().unwrap() - 1;
@@ -66,8 +66,8 @@ fn parse_initial_state(top_input: String) -> Vec<Vec<char>> {
     let width = (line.len() + 1) / 4;
     println!("width = {}", width);
     let mut initial_state = vec![vec![]; width];
-    while let Some(line) = iter.next() {
-        if !line.contains("[") {
+    for line in iter {
+        if !line.contains('[') {
             continue;
         }
         let line = line.to_owned() + " ";
