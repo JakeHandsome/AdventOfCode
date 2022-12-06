@@ -6,6 +6,9 @@ use std::{
     path::Path,
 };
 
+// Short hand result type for a dyn Error
+pub type R<T> = Result<T, Box<dyn Error>>;
+
 pub fn read_input_as_string<P>(input: P) -> String
 where
     P: AsRef<Path>,

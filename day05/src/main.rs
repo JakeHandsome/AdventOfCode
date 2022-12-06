@@ -1,7 +1,5 @@
-use common::read_input_file_for_project_as_string;
-use std::{collections::VecDeque, error::Error, str::Lines, vec};
-
-type ResultErr = Box<dyn Error>;
+use common::{read_input_file_for_project_as_string, R};
+use std::{collections::VecDeque, str::Lines, vec};
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -9,7 +7,7 @@ fn main() {
     println!("Part2: {:#?}", part2(&input));
 }
 
-fn part1(input: &str) -> Result<String, ResultErr> {
+fn part1(input: &str) -> R<String> {
     let mut iter = input.lines();
     let top_input = get_top_input(&mut iter);
     let mut state = parse_initial_state(top_input);
@@ -26,7 +24,7 @@ fn part1(input: &str) -> Result<String, ResultErr> {
     Ok(state.iter().map(|x| x.last().unwrap()).collect())
 }
 
-fn part2(input: &str) -> Result<String, ResultErr> {
+fn part2(input: &str) -> R<String> {
     let mut iter = input.lines();
     let top_input = get_top_input(&mut iter);
     let mut state = parse_initial_state(top_input);
@@ -58,7 +56,7 @@ fn get_top_input(iter: &mut Lines) -> String {
     top_input
 }
 
-fn parse_instruction(instruction: &str) -> Result<(usize, usize, usize), ResultErr> {
+fn parse_instruction(instruction: &str) -> R<(usize, usize, usize)> {
     let mut split = instruction.split(' ');
     let quantity = split.nth(1).unwrap().parse::<usize>()?;
     let start = split.nth(1).unwrap().parse::<usize>()? - 1;
