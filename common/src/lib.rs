@@ -45,7 +45,7 @@ impl std::fmt::Display for AdventOfCodeError {
 }
 impl Error for AdventOfCodeError {}
 impl AdventOfCodeError {
-    fn new<S>(s: S) -> AdventOfCodeError
+    pub fn new<S>(s: S) -> AdventOfCodeError
     where
         S: Into<String>,
     {

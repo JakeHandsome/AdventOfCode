@@ -1,9 +1,9 @@
-use std::vec;
-
+use common::AdventOfCodeError;
 use common::{read_input_file_for_project_as_string, R};
 use itertools::enumerate;
 use itertools::peek_nth;
 use itertools::Itertools;
+use std::vec;
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -12,37 +12,29 @@ fn main() {
 }
 
 fn part1(input: &str) -> R<usize> {
-    const CONSECUTIVE_CHARS: usize = 4;
-
-    let mut iter = peek_nth(enumerate(input.chars()));
-    while let Some((i, current)) = iter.next() {
-        let mut chars = vec![current];
-        for index in 0..CONSECUTIVE_CHARS - 1 {
-            chars.push(iter.peek_nth(index).unwrap().1);
-        }
-        if chars.into_iter().unique().count() == CONSECUTIVE_CHARS {
-            let result = i + CONSECUTIVE_CHARS;
-            return Ok(result);
-        }
-    }
-    todo!();
+    find_index_of_unique_char(input, 4)
 }
 
 fn part2(input: &str) -> R<usize> {
-    const CONSECUTIVE_CHARS: usize = 14;
+    find_index_of_unique_char(input, 14)
+}
 
+fn find_index_of_unique_char(input: &str, consecutive_chars: usize) -> R<usize> {
     let mut iter = peek_nth(enumerate(input.chars()));
     while let Some((i, current)) = iter.next() {
         let mut chars = vec![current];
-        for index in 0..CONSECUTIVE_CHARS - 1 {
+        for index in 0..consecutive_chars - 1 {
             chars.push(iter.peek_nth(index).unwrap().1);
         }
-        if chars.into_iter().unique().count() == CONSECUTIVE_CHARS {
-            let result = i + CONSECUTIVE_CHARS;
+        if chars.into_iter().unique().count() == consecutive_chars {
+            let result = i + consecutive_chars;
             return Ok(result);
         }
     }
-    todo!()
+    Err(Box::new(AdventOfCodeError::new(format!(
+        "Failed to find sequence of {} unique chars",
+        consecutive_chars
+    ))))
 }
 
 #[cfg(test)]
