@@ -23,12 +23,14 @@ fn find_index_of_unique_char(input: &str, consecutive_chars: usize) -> R<usize> 
     let mut iter = peek_nth(enumerate(input.chars()));
     while let Some((i, current)) = iter.next() {
         let mut chars = vec![current];
+        // Peek the next `consecutive_chars` number of characters and add to vector
         for index in 0..consecutive_chars - 1 {
             chars.push(iter.peek_nth(index).unwrap().1);
         }
+        // Reduce the vector to unique only, if that amount is equal to consecutive chars, they are all unique
         if chars.into_iter().unique().count() == consecutive_chars {
-            let result = i + consecutive_chars;
-            return Ok(result);
+            // i is the start index, to get the last index (1 based) add the number of characters
+            return Ok(i + consecutive_chars);
         }
     }
     Err(Box::new(AdventOfCodeError::new(format!(
