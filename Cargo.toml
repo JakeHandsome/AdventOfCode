@@ -5,7 +5,10 @@ members = [
    "day02",
    "day03",
    "day04",
-   "day05","day06"]
+   "day05",
+   "day06",
+   "day07",
+]
 
 # Optimize all dependencies even in debug builds (does not affect workspace packages):
 [profile.dev.package."*"]
