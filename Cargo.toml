@@ -8,6 +8,7 @@ members = [
    "day05",
    "day06",
    "day07",
+   "day08",
 ]
 
 # Optimize all dependencies even in debug builds (does not affect workspace packages):
