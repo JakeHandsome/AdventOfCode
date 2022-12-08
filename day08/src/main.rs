@@ -1,4 +1,4 @@
-use common::{read_input_file_for_project_as_string, AdventOfCodeError, R};
+use common::{read_input_file_for_project_as_string, R};
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -22,20 +22,16 @@ struct Tree {
 impl Forest {
     fn new(trees: Vec<usize>, width: usize) -> Self {
         let len = trees.len();
+        // Solve for height using length and width
         let height = len / width;
+        // Convert the heights into Trees
         let trees = trees
             .into_iter()
             .enumerate()
             .map(|(i, height)| {
+                // Check for Trees on the outside and mark them as visible right away
                 let mut outside = false;
-                if i < width {
-                    // Top perimeter
-                    outside = true;
-                } else if i >= len - width {
-                    // bottom perimeter
-                    outside = true;
-                } else if i % width == 0 || i % width == width - 1 {
-                    // side perimeter
+                if i < width || i >= len - width || i % width == 0 || i % width == width - 1 {
                     outside = true;
                 }
                 Tree {
@@ -46,6 +42,7 @@ impl Forest {
             .collect::<Vec<Tree>>();
         Forest { trees, width, height }
     }
+    // Gets a specific index of trees, If x/y are out of the bounds of the grid, return None
     fn get(&self, x: isize, y: isize) -> Option<Tree> {
         if x >= self.width as isize || y >= self.height as isize || x.is_negative() || y.is_negative() {
             None
@@ -56,11 +53,13 @@ impl Forest {
             Some(self.trees[y * self.width + x])
         }
     }
+    // Returns a whole row of trees
     fn get_row_mut(&mut self, index: usize) -> Vec<&mut Tree> {
         assert!(index < self.height);
         let start = index * self.height;
         self.trees[start..start + self.width].as_mut().iter_mut().collect()
     }
+    // Returns a whole column of trees
     fn get_col_mut(&mut self, index: usize) -> Vec<&mut Tree> {
         assert!(index < self.width);
         self.trees
@@ -76,6 +75,7 @@ fn part1(input: &str) -> R<usize> {
     let mut width = None;
     for line in input.lines() {
         if width.is_none() {
+            // Set the width based on the length of the first line
             width = Some(line.len());
         }
         for char in line.chars() {
@@ -98,6 +98,7 @@ fn part1(input: &str) -> R<usize> {
     }
     for col in 0..forest.width {
         let mut max_height = 0;
+        // Do a vision check from the top to bottom
         for mut tree in forest.get_col_mut(col) {
             if tree.height > max_height {
                 max_height = tree.height;
@@ -105,6 +106,7 @@ fn part1(input: &str) -> R<usize> {
             }
         }
         max_height = 0;
+        // Do a vision check from bottom to top
         for mut tree in forest.get_col_mut(col).into_iter().rev() {
             if tree.height > max_height {
                 max_height = tree.height;
@@ -112,7 +114,6 @@ fn part1(input: &str) -> R<usize> {
             }
         }
     }
-
     for row in 0..forest.width {
         let mut max_height = 0;
         for mut tree in forest.get_row_mut(row) {
@@ -147,19 +148,16 @@ fn part2(input: &str) -> R<usize> {
     let forest = Forest::new(trees, width.unwrap());
 
     let mut max_score = 0usize;
-    let mut max_score_index = (0, 0);
     for x in 0..forest.width {
         let x: isize = x.try_into().unwrap();
         for y in 0..forest.height {
             let y: isize = y.try_into().unwrap();
             let local_score = calc_tree_score(&forest, x, y);
             if local_score > max_score {
-                max_score_index = (x, y);
                 max_score = local_score;
             }
         }
     }
-    println!("{:?}", max_score_index);
     #[cfg(not(test))]
     {
         println!("{}", max_score);
