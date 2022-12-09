@@ -8,25 +8,6 @@ fn main() {
     println!("Part2: {:#?}", part2(&input).unwrap());
 }
 
-#[derive(Debug)]
-enum Direction {
-    Left,
-    Right,
-    Up,
-    Down,
-}
-
-fn char_to_direction(c: &str) -> Direction {
-    use Direction::*;
-    match c {
-        "R" => Right,
-        "L" => Left,
-        "U" => Up,
-        "D" => Down,
-        _ => todo!(),
-    }
-}
-
 fn calculate_tail_movement(head: &(isize, isize), tail: &(isize, isize)) -> (isize, isize) {
     let mut tail = tail.to_owned();
     // If on the same column
@@ -74,15 +55,16 @@ fn part1(input: &str) -> R<usize> {
     let iter = input.lines();
     for command in iter {
         let split = command.split(' ').collect::<Vec<_>>();
-        let direction = char_to_direction(split.first().unwrap());
+        let direction = split.first().unwrap().to_owned();
         let count: usize = split.last().unwrap().parse()?;
         for _ in 0..count {
             // Move head
             match direction {
-                Direction::Left => head_position.0 -= 1,
-                Direction::Right => head_position.0 += 1,
-                Direction::Up => head_position.1 += 1,
-                Direction::Down => head_position.1 -= 1,
+                "L" => head_position.0 -= 1,
+                "R" => head_position.0 += 1,
+                "U" => head_position.1 += 1,
+                "D" => head_position.1 -= 1,
+                _ => unreachable!("input should only be L R U D"),
             }
             // Move tail
             tail_position = calculate_tail_movement(&head_position, &tail_position);
@@ -98,16 +80,17 @@ fn part2(input: &str) -> R<usize> {
     let iter = input.lines();
     for command in iter {
         let split = command.split(' ').collect::<Vec<_>>();
-        let direction = char_to_direction(split.first().unwrap());
+        let direction = split.first().unwrap().to_owned();
         let count: usize = split.last().unwrap().parse()?;
         // Move each piece in the direction count number of times
         for _ in 0..count {
             // Move head
             match direction {
-                Direction::Left => positions[0].0 -= 1,
-                Direction::Right => positions[0].0 += 1,
-                Direction::Up => positions[0].1 += 1,
-                Direction::Down => positions[0].1 -= 1,
+                "L" => positions[0].0 -= 1,
+                "R" => positions[0].0 += 1,
+                "U" => positions[0].1 += 1,
+                "D" => positions[0].1 -= 1,
+                _ => unreachable!("input should only be L R U D"),
             }
             // Look at each knot besides the first and calculate its new positions based on the knot infront of it
             let number_of_segments = positions.len();
