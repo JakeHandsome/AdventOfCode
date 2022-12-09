@@ -1,6 +1,6 @@
-use std::{collections::HashSet, hash::Hash};
+use std::{collections::HashSet};
 
-use common::{read_input_file_for_project_as_string, AdventOfCodeError, R};
+use common::{read_input_file_for_project_as_string, R};
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -31,18 +31,18 @@ fn part1(input: &str) -> R<usize> {
     let mut tail_positions: HashSet<(isize, isize)> = HashSet::new();
     let mut head_position = (0isize, 0isize);
     let mut tail_position = (0isize, 0isize);
-    let mut iter = input.lines().into_iter();
-    while let Some(command) = iter.next() {
-        let split = command.split(" ").collect::<Vec<_>>();
+    let iter = input.lines();
+    for command in iter {
+        let split = command.split(' ').collect::<Vec<_>>();
         let direction = char_to_direction(split.first().unwrap());
         let count: usize = split.last().unwrap().parse()?;
         for _ in 0..count {
             // Move head
             match direction {
-                Direction::Left => head_position.0 = head_position.0 - 1,
-                Direction::Right => head_position.0 = head_position.0 + 1,
-                Direction::Up => head_position.1 = head_position.1 + 1,
-                Direction::Down => head_position.1 = head_position.1 - 1,
+                Direction::Left => head_position.0 -= 1,
+                Direction::Right => head_position.0 += 1,
+                Direction::Up => head_position.1 += 1,
+                Direction::Down => head_position.1 -= 1,
             }
             // Move tail
             // If on the same column
@@ -89,18 +89,18 @@ fn part1(input: &str) -> R<usize> {
 fn part2(input: &str) -> R<usize> {
     let mut tail_positions: HashSet<(isize, isize)> = HashSet::new();
     let mut positions: Vec<(isize, isize)> = vec![(0, 0); 10];
-    let mut iter = input.lines().into_iter();
-    while let Some(command) = iter.next() {
-        let split = command.split(" ").collect::<Vec<_>>();
+    let iter = input.lines();
+    for command in iter {
+        let split = command.split(' ').collect::<Vec<_>>();
         let direction = char_to_direction(split.first().unwrap());
         let count: usize = split.last().unwrap().parse()?;
         for _ in 0..count {
             // Move head
             match direction {
-                Direction::Left => positions[0].0 = positions[0].0 - 1,
-                Direction::Right => positions[0].0 = positions[0].0 + 1,
-                Direction::Up => positions[0].1 = positions[0].1 + 1,
-                Direction::Down => positions[0].1 = positions[0].1 - 1,
+                Direction::Left => positions[0].0 -= 1,
+                Direction::Right => positions[0].0 += 1,
+                Direction::Up => positions[0].1 += 1,
+                Direction::Down => positions[0].1 -= 1,
             }
             // Move tail
             for i in 1..positions.len() {
