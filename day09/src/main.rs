@@ -1,4 +1,4 @@
-use std::{collections::HashSet};
+use std::collections::HashSet;
 
 use common::{read_input_file_for_project_as_string, R};
 
@@ -27,6 +27,46 @@ fn char_to_direction(c: &str) -> Direction {
     }
 }
 
+fn calculate_tail_movement(head: &(isize, isize), tail: &(isize, isize)) -> (isize, isize) {
+    let mut tail = tail.to_owned();
+    // If on the same column
+    if head.1 == tail.1 {
+        if head.0 - tail.0 == 2 {
+            tail.0 += 1;
+        }
+        if -head.0 + tail.0 == 2 {
+            tail.0 -= 1;
+        }
+    }
+    // If on the same row
+    else if head.0 == tail.0 {
+        if head.1 - tail.1 == 2 {
+            tail.1 += 1;
+        }
+        if -head.1 + tail.1 == 2 {
+            tail.1 -= 1;
+        }
+    }
+    // Differnt row and col
+    else {
+        // Determine if far enough away
+        if (head.0 - tail.0).abs() + (head.1 - tail.1).abs() >= 3 {
+            // Move diagonally
+            if head.0 > tail.0 {
+                tail.0 += 1;
+            } else {
+                tail.0 -= 1;
+            }
+            if head.1 > tail.1 {
+                tail.1 += 1;
+            } else {
+                tail.1 -= 1;
+            }
+        }
+    }
+    tail
+}
+
 fn part1(input: &str) -> R<usize> {
     let mut tail_positions: HashSet<(isize, isize)> = HashSet::new();
     let mut head_position = (0isize, 0isize);
@@ -45,41 +85,7 @@ fn part1(input: &str) -> R<usize> {
                 Direction::Down => head_position.1 -= 1,
             }
             // Move tail
-            // If on the same column
-            if head_position.1 == tail_position.1 {
-                if head_position.0 - tail_position.0 == 2 {
-                    tail_position.0 += 1;
-                }
-                if -head_position.0 + tail_position.0 == 2 {
-                    tail_position.0 -= 1;
-                }
-            }
-            // If on the same row
-            else if head_position.0 == tail_position.0 {
-                if head_position.1 - tail_position.1 == 2 {
-                    tail_position.1 += 1;
-                }
-                if -head_position.1 + tail_position.1 == 2 {
-                    tail_position.1 -= 1;
-                }
-            }
-            // Differnt row and col
-            else {
-                // Determine if far enough away
-                if (head_position.0 - tail_position.0).abs() + (head_position.1 - tail_position.1).abs() == 3 {
-                    // Move diagonally
-                    if head_position.0 > tail_position.0 {
-                        tail_position.0 += 1;
-                    } else {
-                        tail_position.0 -= 1;
-                    }
-                    if head_position.1 > tail_position.1 {
-                        tail_position.1 += 1;
-                    } else {
-                        tail_position.1 -= 1;
-                    }
-                }
-            }
+            tail_position = calculate_tail_movement(&head_position, &tail_position);
             tail_positions.insert(tail_position);
         }
     }
@@ -94,6 +100,7 @@ fn part2(input: &str) -> R<usize> {
         let split = command.split(' ').collect::<Vec<_>>();
         let direction = char_to_direction(split.first().unwrap());
         let count: usize = split.last().unwrap().parse()?;
+        // Move each piece in the direction count number of times
         for _ in 0..count {
             // Move head
             match direction {
@@ -102,47 +109,16 @@ fn part2(input: &str) -> R<usize> {
                 Direction::Up => positions[0].1 += 1,
                 Direction::Down => positions[0].1 -= 1,
             }
-            // Move tail
-            for i in 1..positions.len() {
-                let head = positions.get(i - 1).unwrap().to_owned();
-                let mut tail_position = positions.get_mut(i).unwrap();
+            // Look at each knot besides the first and calculate its new positions based on the knot infront of it
+            let number_of_segments = positions.len();
+            for i in 1..number_of_segments {
+                let segment_ahead = positions.get(i - 1).unwrap().to_owned();
+                let current_segment = positions.get_mut(i).unwrap();
                 // If on the same column
-                if head.1 == tail_position.1 {
-                    if head.0 - tail_position.0 == 2 {
-                        tail_position.0 += 1;
-                    }
-                    if -head.0 + tail_position.0 == 2 {
-                        tail_position.0 -= 1;
-                    }
-                }
-                // If on the same row
-                else if head.0 == tail_position.0 {
-                    if head.1 - tail_position.1 == 2 {
-                        tail_position.1 += 1;
-                    }
-                    if -head.1 + tail_position.1 == 2 {
-                        tail_position.1 -= 1;
-                    }
-                }
-                // Differnt row and col
-                else {
-                    // Determine if far enough away
-                    if (head.0 - tail_position.0).abs() + (head.1 - tail_position.1).abs() >= 3 {
-                        // Move diagonally
-                        if head.0 > tail_position.0 {
-                            tail_position.0 += 1;
-                        } else {
-                            tail_position.0 -= 1;
-                        }
-                        if head.1 > tail_position.1 {
-                            tail_position.1 += 1;
-                        } else {
-                            tail_position.1 -= 1;
-                        }
-                    }
-                }
-                if i == 10 - 1 {
-                    tail_positions.insert(tail_position.to_owned());
+                *current_segment = calculate_tail_movement(&segment_ahead, current_segment);
+                // If this is the last rope segment, save its position
+                if i == number_of_segments - 1 {
+                    tail_positions.insert(current_segment.to_owned());
                 }
             }
         }
