@@ -11,7 +11,7 @@ fn main() {
 
 #[derive(Debug)]
 enum PathItem {
-    File { name: String, size: usize },
+    File { _name: String, size: usize },
     Folder { name: String },
 }
 fn part1(input: &str) -> R<usize> {
@@ -64,7 +64,7 @@ fn parse_file_system_to_tree(input: &str) -> R<(Tree<PathItem>, HashMap<String, 
                     let mut split = line.split(' ');
                     current_node.append(PathItem::File {
                         size: split.next().unwrap().parse()?,
-                        name: split.next().unwrap().to_string(),
+                        _name: split.next().unwrap().to_string(),
                     });
                 }
             }
@@ -110,7 +110,7 @@ fn calculate_size_of_each_directory(tree: Tree<PathItem>, ids: HashMap<String, N
         for child in node.children() {
             match child.data() {
                 // If this a file, increment the size
-                PathItem::File { name: _, size } => dir_size += size,
+                PathItem::File { _name: _, size } => dir_size += size,
                 // If this a directory, lookup its size and add it to this directory
                 PathItem::Folder { name } => dir_size += dir_sizes[name],
             }
