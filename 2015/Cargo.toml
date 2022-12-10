@@ -1,5 +1,5 @@
 [workspace]
-members = ["day01", "day02", "day03"]
+members = ["day??"]
 
 # Optimize all dependencies even in debug builds (does not affect workspace packages):
 [profile.dev.package."*"]
