@@ -16,6 +16,7 @@ fn part1(input: &str) -> R<isize> {
         if command == "addx" {
             let value = split.next().unwrap().parse::<isize>()?;
             cycle += 1;
+            // Each time cycle tics check if the current cycle is one to track and add to solution
             if cycle % 40 == 20 {
                 solution += cycle as isize * register;
             }
@@ -35,7 +36,8 @@ fn part1(input: &str) -> R<isize> {
 }
 
 fn part2(input: &str) -> R<String> {
-    let mut solution = vec![0; 240];
+    // CRT solution, transform to string at end
+    let solution = &mut [false; 240];
     let mut cycle = 0usize;
     let mut sprite_pos = 1isize;
     for line in input.lines() {
@@ -44,30 +46,31 @@ fn part2(input: &str) -> R<String> {
         if command == "addx" {
             let value = split.next().unwrap().parse::<isize>()?;
             if (cycle % 40) as isize >= sprite_pos - 1 && (cycle % 40) as isize <= sprite_pos + 1 {
-                solution[cycle] = 1;
+                solution[cycle] = true;
             }
             cycle += 1;
             if (cycle % 40) as isize >= sprite_pos - 1 && (cycle % 40) as isize <= sprite_pos + 1 {
-                solution[cycle] = 1;
+                solution[cycle] = true;
             }
             cycle += 1;
             sprite_pos += value;
         } else {
             if (cycle % 40) as isize >= sprite_pos - 1 && (cycle % 40) as isize <= sprite_pos + 1 {
-                solution[cycle] = 1;
+                solution[cycle] = true;
             }
             cycle += 1;
         }
     }
+    // Convert array into string
     Ok(solution
         .into_iter()
         .enumerate()
         .map(|(i, x)| {
             let mut str = "".to_owned();
-            if x == 0 {
-                str += ".";
-            } else {
+            if *x {
                 str += "#";
+            } else {
+                str += ".";
             }
             if i % 40 == 39 {
                 str += "\n";
@@ -78,7 +81,7 @@ fn part2(input: &str) -> R<String> {
 }
 
 #[cfg(test)]
-mod day9 {
+mod day10 {
     use super::*;
     const SAMPLE1: &str = r#"addx 15
 addx -11
