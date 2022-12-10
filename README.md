@@ -9,3 +9,5 @@ To run any solution
    1. You can also create an environment variable called `AOC_SESSION` with the session token and the input will be automatically downloaded
 1. run `cargo run -p day##` 
    - ex cargo run -p day1
+
+Create a new day solution with `cargo generate --path ../template`
