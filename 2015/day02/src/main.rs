@@ -28,14 +28,14 @@ fn part2(input: &str) -> R<usize> {
 
 fn wrapping_needed(l: usize, w: usize, h: usize) -> usize {
     let sides = &[l * w, w * h, l * h];
-    sides.iter().map(|s| 2 * s).sum::<usize>() + *sides.into_iter().min().unwrap()
+    sides.iter().map(|s| 2 * s).sum::<usize>() + *sides.iter().min().unwrap()
 }
 
 fn ribbon_needed(l: usize, w: usize, h: usize) -> usize {
     let mut sides = vec![l, w, h];
     let bow: usize = sides.iter().product();
     sides.sort();
-    let wrap = sides.get(0).unwrap() * 2 + sides.get(1).unwrap() * 2;
+    let wrap = sides.first().unwrap() * 2 + sides.get(1).unwrap() * 2;
 
     wrap + bow
 }

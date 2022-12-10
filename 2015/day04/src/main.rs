@@ -29,7 +29,7 @@ fn part2(input: &str) -> R<usize> {
         .into_par_iter()
         .find_first(|&x| {
             let combined = format!("{}{}", input, x);
-            let hash = format!("{:x}", compute(&combined));
+            let hash = format!("{:x}", compute(combined));
             hash.starts_with("000000")
         })
         .unwrap()
@@ -40,7 +40,6 @@ fn part2(input: &str) -> R<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const SAMPLE1: &str = r#""#;
     #[test]
     fn p1_test() {
         assert_eq!(part1("abcdef").unwrap(), 609043);
