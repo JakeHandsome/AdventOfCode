@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use common::*;
 
 fn main() {
@@ -67,12 +65,12 @@ fn part2(input: &str) -> R<String> {
         .map(|(i, x)| {
             let mut str = "".to_owned();
             if x == 0 {
-                str = str + ".";
+                str += ".";
             } else {
-                str = str + "#";
+                str += "#";
             }
             if i % 40 == 39 {
-                str = str + "\n";
+                str += "\n";
             }
             str
         })
@@ -228,7 +226,6 @@ addx -11
 noop
 noop
 noop"#;
-    const SAMPLE2: &str = r#""#;
     #[test]
     fn p1_test() {
         assert_eq!(part1(SAMPLE1).unwrap(), 13140);
