@@ -63,7 +63,7 @@ fn part2(input: &str) -> R<String> {
     }
     // Convert array into string
     Ok(solution
-        .into_iter()
+        .iter_mut()
         .enumerate()
         .map(|(i, x)| {
             let mut str = "".to_owned();

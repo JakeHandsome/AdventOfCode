@@ -1,7 +1,7 @@
-use std::{collections::HashSet, ops::Deref};
+
 
 use common::*;
-use factor::{factor::factor, factor_include::factor_include};
+
 use rayon::prelude::*;
 
 fn main() {
@@ -29,7 +29,7 @@ struct Operation {
 }
 impl Operation {
     fn new(input: &str) -> Self {
-        let split = input.trim().split(" ").collect::<Vec<_>>();
+        let split = input.trim().split(' ').collect::<Vec<_>>();
         let operation_type = match split.get(4).unwrap().to_owned() {
             "*" => OperationType::Muliply,
             "+" => OperationType::Add,
@@ -71,9 +71,9 @@ fn part1(input: &str) -> R<usize> {
             .map(|x| x.trim().parse::<u128>().unwrap())
             .collect::<Vec<_>>();
         let operation = Operation::new(monkey[2]);
-        let divisor = monkey[3].trim().split(" ").last().unwrap().parse::<usize>()?;
-        let if_true = monkey[4].trim().split(" ").last().unwrap().parse::<usize>()?;
-        let if_false = monkey[5].trim().split(" ").last().unwrap().parse::<usize>()?;
+        let divisor = monkey[3].trim().split(' ').last().unwrap().parse::<usize>()?;
+        let if_true = monkey[4].trim().split(' ').last().unwrap().parse::<usize>()?;
+        let if_false = monkey[5].trim().split(' ').last().unwrap().parse::<usize>()?;
         monkeys.push(Monkey {
             index,
             held_items: starting_items,
@@ -95,13 +95,13 @@ fn part1(input: &str) -> R<usize> {
                     monkey.inspections += 1;
                     let value = match monkey.operation.value {
                         OperationValue::Number(x) => x as u128,
-                        OperationValue::Old => item.clone(),
+                        OperationValue::Old => *item,
                     };
                     match monkey.operation.operation_type {
-                        OperationType::Add => *item = *item + value,
-                        OperationType::Muliply => *item = *item * value,
+                        OperationType::Add => *item += value,
+                        OperationType::Muliply => *item *= value,
                     };
-                    *item = *item / 3;
+                    *item /= 3;
                     val_to_push.push(*item);
                     if *item % monkey.divisor as u128 == 0 {
                         monkey_to_receive.push(monkey.if_true);
@@ -137,9 +137,9 @@ fn part2(input: &str) -> R<usize> {
             .map(|x| x.trim().parse::<usize>().unwrap())
             .collect::<Vec<_>>();
         let operation = Operation::new(monkey[2]);
-        let divisor = monkey[3].trim().split(" ").last().unwrap().parse::<usize>()?;
-        let if_true = monkey[4].trim().split(" ").last().unwrap().parse::<usize>()?;
-        let if_false = monkey[5].trim().split(" ").last().unwrap().parse::<usize>()?;
+        let divisor = monkey[3].trim().split(' ').last().unwrap().parse::<usize>()?;
+        let if_true = monkey[4].trim().split(' ').last().unwrap().parse::<usize>()?;
+        let if_false = monkey[5].trim().split(' ').last().unwrap().parse::<usize>()?;
         monkeys.push(Monkey {
             index,
             held_items: starting_items,
@@ -162,11 +162,11 @@ fn part2(input: &str) -> R<usize> {
                     monkey.inspections += 1;
                     let value = match monkey.operation.value {
                         OperationValue::Number(x) => x,
-                        OperationValue::Old => item.clone(),
+                        OperationValue::Old => *item,
                     };
                     match monkey.operation.operation_type {
-                        OperationType::Add => *item = *item + value,
-                        OperationType::Muliply => *item = *item * value,
+                        OperationType::Add => *item += value,
+                        OperationType::Muliply => *item *= value,
                     };
                     // Reduce the levels by the common divisor
                     *item %= common_divisor;
