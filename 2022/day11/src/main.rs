@@ -1,8 +1,4 @@
-
-
 use common::*;
-
-use rayon::prelude::*;
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -46,7 +42,7 @@ impl Operation {
 
 #[derive(Debug)]
 struct Monkey<T> {
-    index: usize,
+    _index: usize,
     held_items: Vec<T>,
     operation: Operation,
     divisor: usize,
@@ -75,7 +71,7 @@ fn part1(input: &str) -> R<usize> {
         let if_true = monkey[4].trim().split(' ').last().unwrap().parse::<usize>()?;
         let if_false = monkey[5].trim().split(' ').last().unwrap().parse::<usize>()?;
         monkeys.push(Monkey {
-            index,
+            _index: index,
             held_items: starting_items,
             operation,
             divisor,
@@ -141,7 +137,7 @@ fn part2(input: &str) -> R<usize> {
         let if_true = monkey[4].trim().split(' ').last().unwrap().parse::<usize>()?;
         let if_false = monkey[5].trim().split(' ').last().unwrap().parse::<usize>()?;
         monkeys.push(Monkey {
-            index,
+            _index: index,
             held_items: starting_items,
             operation,
             divisor,
