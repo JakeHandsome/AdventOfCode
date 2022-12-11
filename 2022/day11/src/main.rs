@@ -41,9 +41,9 @@ impl Operation {
 }
 
 #[derive(Debug)]
-struct Monkey<T> {
+struct Monkey {
     _index: usize,
-    held_items: Vec<T>,
+    held_items: Vec<usize>,
     operation: Operation,
     divisor: usize,
     if_true: usize,
@@ -51,78 +51,8 @@ struct Monkey<T> {
     inspections: usize,
 }
 
-fn part1(input: &str) -> R<usize> {
-    let mut vec = input.lines().collect::<Vec<&str>>();
-    vec.push("");
-    let iter = vec.chunks(7);
-    let mut monkeys = vec![];
-    for monkey in iter {
-        let index = monkey[0][7..=7].parse::<usize>()?;
-        let starting_items = monkey[1]
-            .trim()
-            .split(':')
-            .last()
-            .unwrap()
-            .split(',')
-            .map(|x| x.trim().parse::<u128>().unwrap())
-            .collect::<Vec<_>>();
-        let operation = Operation::new(monkey[2]);
-        let divisor = monkey[3].trim().split(' ').last().unwrap().parse::<usize>()?;
-        let if_true = monkey[4].trim().split(' ').last().unwrap().parse::<usize>()?;
-        let if_false = monkey[5].trim().split(' ').last().unwrap().parse::<usize>()?;
-        monkeys.push(Monkey {
-            _index: index,
-            held_items: starting_items,
-            operation,
-            divisor,
-            if_true,
-            if_false,
-            inspections: 0,
-        });
-    }
-
-    for _round in 0..20 {
-        for i in 0..monkeys.len() {
-            let mut val_to_push = vec![];
-            let mut monkey_to_receive = vec![];
-            {
-                let monkey = monkeys.get_mut(i).unwrap();
-                for item in monkey.held_items.iter_mut() {
-                    monkey.inspections += 1;
-                    let value = match monkey.operation.value {
-                        OperationValue::Number(x) => x as u128,
-                        OperationValue::Old => *item,
-                    };
-                    match monkey.operation.operation_type {
-                        OperationType::Add => *item += value,
-                        OperationType::Muliply => *item *= value,
-                    };
-                    *item /= 3;
-                    val_to_push.push(*item);
-                    if *item % monkey.divisor as u128 == 0 {
-                        monkey_to_receive.push(monkey.if_true);
-                    } else {
-                        monkey_to_receive.push(monkey.if_false);
-                    }
-                }
-                monkey.held_items.clear();
-            }
-            for (i, val) in val_to_push.into_iter().enumerate() {
-                monkeys.get_mut(monkey_to_receive[i]).unwrap().held_items.push(val);
-            }
-        }
-    }
-    let mut inspections = monkeys.into_iter().map(|x| x.inspections).collect::<Vec<_>>();
-    inspections.sort_by(|a, b| b.cmp(a));
-    Ok(inspections[0] * inspections[1])
-}
-
-fn part2(input: &str) -> R<usize> {
-    let mut vec = input.lines().collect::<Vec<&str>>();
-    vec.push("");
-    let iter = vec.chunks(7);
-    let mut monkeys = vec![];
-    for monkey in iter {
+impl Monkey {
+    fn new(monkey: &[&str]) -> R<Self> {
         let index = monkey[0][7..=7].parse::<usize>()?;
         let starting_items = monkey[1]
             .trim()
@@ -136,7 +66,7 @@ fn part2(input: &str) -> R<usize> {
         let divisor = monkey[3].trim().split(' ').last().unwrap().parse::<usize>()?;
         let if_true = monkey[4].trim().split(' ').last().unwrap().parse::<usize>()?;
         let if_false = monkey[5].trim().split(' ').last().unwrap().parse::<usize>()?;
-        monkeys.push(Monkey {
+        Ok(Monkey {
             _index: index,
             held_items: starting_items,
             operation,
@@ -144,41 +74,75 @@ fn part2(input: &str) -> R<usize> {
             if_true,
             if_false,
             inspections: 0,
-        });
+        })
+    }
+}
+
+fn execute_round(monkeys: &mut Vec<Monkey>, common_divisor: Option<usize>) {
+    for i in 0..monkeys.len() {
+        let mut val_to_push = vec![];
+        let mut monkey_to_receive = vec![];
+        {
+            let monkey = monkeys.get_mut(i).unwrap();
+            for item in monkey.held_items.iter_mut() {
+                monkey.inspections += 1;
+                let value = match monkey.operation.value {
+                    OperationValue::Number(x) => x,
+                    OperationValue::Old => *item,
+                };
+                match monkey.operation.operation_type {
+                    OperationType::Add => *item += value,
+                    OperationType::Muliply => *item *= value,
+                };
+                match common_divisor {
+                    // Reduce all items by the common divisor if it is set
+                    Some(x) => *item %= x,
+                    None => *item /= 3,
+                }
+                val_to_push.push(*item);
+                if *item % monkey.divisor == 0 {
+                    monkey_to_receive.push(monkey.if_true);
+                } else {
+                    monkey_to_receive.push(monkey.if_false);
+                }
+            }
+            monkey.held_items.clear();
+        }
+        for (i, val) in val_to_push.into_iter().enumerate() {
+            monkeys.get_mut(monkey_to_receive[i]).unwrap().held_items.push(val);
+        }
+    }
+}
+
+fn part1(input: &str) -> R<usize> {
+    let mut vec = input.lines().collect::<Vec<&str>>();
+    vec.push("");
+    let iter = vec.chunks(7);
+    let mut monkeys = vec![];
+    for monkey in iter {
+        monkeys.push(Monkey::new(monkey)?);
+    }
+
+    for _round in 0..20 {
+        execute_round(&mut monkeys, None);
+    }
+    let mut inspections = monkeys.into_iter().map(|x| x.inspections).collect::<Vec<_>>();
+    inspections.sort_by(|a, b| b.cmp(a));
+    Ok(inspections[0] * inspections[1])
+}
+
+fn part2(input: &str) -> R<usize> {
+    let mut vec = input.lines().collect::<Vec<&str>>();
+    vec.push("");
+    let iter = vec.chunks(7);
+    let mut monkeys = vec![];
+    for monkey in iter {
+        monkeys.push(Monkey::new(monkey)?);
     }
     // All the divisors multiplied together
     let common_divisor: usize = monkeys.iter().map(|m| m.divisor).product();
     for _round in 0..10_000 {
-        for i in 0..monkeys.len() {
-            let mut val_to_push = vec![];
-            let mut monkey_to_receive = vec![];
-            {
-                let monkey = monkeys.get_mut(i).unwrap();
-                for item in monkey.held_items.iter_mut() {
-                    monkey.inspections += 1;
-                    let value = match monkey.operation.value {
-                        OperationValue::Number(x) => x,
-                        OperationValue::Old => *item,
-                    };
-                    match monkey.operation.operation_type {
-                        OperationType::Add => *item += value,
-                        OperationType::Muliply => *item *= value,
-                    };
-                    // Reduce the levels by the common divisor
-                    *item %= common_divisor;
-                    if *item % monkey.divisor == 0 {
-                        monkey_to_receive.push(monkey.if_true);
-                    } else {
-                        monkey_to_receive.push(monkey.if_false);
-                    }
-                    val_to_push.push(*item);
-                }
-                monkey.held_items.clear();
-            }
-            for (i, val) in val_to_push.into_iter().enumerate() {
-                monkeys.get_mut(monkey_to_receive[i]).unwrap().held_items.push(val);
-            }
-        }
+        execute_round(&mut monkeys, Some(common_divisor));
     }
     let mut inspections = monkeys.into_iter().map(|x| x.inspections).collect::<Vec<_>>();
     inspections.sort_by(|a, b| b.cmp(a));
