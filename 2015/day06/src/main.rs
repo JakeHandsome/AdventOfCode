@@ -1,5 +1,3 @@
-use std::io::Split;
-
 use common::*;
 
 fn main() {
@@ -18,19 +16,19 @@ fn part1(input: &str) -> R<usize> {
     let mut lights = vec![false; 1000 * 1000];
 
     for line in input.lines() {
-        let split = line.split(" ").collect::<Vec<_>>();
+        let split = line.split(' ').collect::<Vec<_>>();
         let mut action = Action::Off;
-        let mut start = (0, 0);
-        let mut end = (0, 0);
+        let start;
+        let end;
         if split[0] == "toggle" {
             action = Action::Toggle;
             let start_split = split[1]
-                .split(",")
+                .split(',')
                 .map(|x| x.trim().parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             start = (start_split[0], start_split[1]);
             let end_split = split[3]
-                .split(",")
+                .split(',')
                 .map(|x| x.trim().parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             end = (end_split[0], end_split[1]);
@@ -39,12 +37,12 @@ fn part1(input: &str) -> R<usize> {
                 action = Action::On;
             }
             let start_split = split[2]
-                .split(",")
+                .split(',')
                 .map(|x| x.trim().parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             start = (start_split[0], start_split[1]);
             let end_split = split[4]
-                .split(",")
+                .split(',')
                 .map(|x| x.trim().parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             end = (end_split[0], end_split[1]);
@@ -67,19 +65,19 @@ fn part2(input: &str) -> R<usize> {
     let mut lights = vec![0usize; 1000 * 1000];
 
     for line in input.lines() {
-        let split = line.split(" ").collect::<Vec<_>>();
+        let split = line.split(' ').collect::<Vec<_>>();
         let mut action = Action::Off;
-        let mut start = (0, 0);
-        let mut end = (0, 0);
+        let start;
+        let end;
         if split[0] == "toggle" {
             action = Action::Toggle;
             let start_split = split[1]
-                .split(",")
+                .split(',')
                 .map(|x| x.trim().parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             start = (start_split[0], start_split[1]);
             let end_split = split[3]
-                .split(",")
+                .split(',')
                 .map(|x| x.trim().parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             end = (end_split[0], end_split[1]);
@@ -88,12 +86,12 @@ fn part2(input: &str) -> R<usize> {
                 action = Action::On;
             }
             let start_split = split[2]
-                .split(",")
+                .split(',')
                 .map(|x| x.trim().parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             start = (start_split[0], start_split[1]);
             let end_split = split[4]
-                .split(",")
+                .split(',')
                 .map(|x| x.trim().parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             end = (end_split[0], end_split[1]);
@@ -114,18 +112,4 @@ fn part2(input: &str) -> R<usize> {
         }
     }
     Ok(lights.into_iter().sum())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    const SAMPLE1: &str = r#""#;
-    #[test]
-    fn p1_test() {
-        assert_eq!(part1(SAMPLE1).unwrap(), 13140);
-    }
-    #[test]
-    fn p2_test() {
-        assert_eq!(part2(SAMPLE1).unwrap(), 0);
-    }
 }
