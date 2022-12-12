@@ -3,6 +3,12 @@ use std::vec;
 use common::*;
 use rayon::prelude::*;
 
+/// This solution has multiple iterations of getting an answer with different timer intervals
+/// My first part 2 solution was ran single threadded and took ~6 mins on a 7950X
+/// Now my part 2 takes 200ms which is 4x faster than my original *part 1*
+/// # The optimizations I made
+/// - Start the path finding from last to first instead of first to last
+/// - Pre cacluclate all paths for part2 and just do a lookup
 fn main() {
     let input = read_input_file_for_project_as_string!();
     {
