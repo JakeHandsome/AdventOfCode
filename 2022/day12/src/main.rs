@@ -31,6 +31,80 @@ impl Map {
             Some(self.tiles[y * self.width + x])
         }
     }
+    fn calc_distance(&self, start: usize, end: usize) -> R<usize> {
+        let end = self.index_to_x_y(end);
+        let start = Tile {
+            position: self.index_to_x_y(start),
+            height: 'a' as u8,
+            distance: 0,
+        };
+        let mut list = vec![start];
+        let mut num_to_skip = 0;
+        loop {
+            let mut list2: Vec<Tile> = vec![];
+            for tile in &list[num_to_skip..list.len()] {
+                let up = (tile.position.0, tile.position.1 - 1);
+                let down = (tile.position.0, tile.position.1 + 1);
+                let left = (tile.position.0 - 1, tile.position.1);
+                let right = (tile.position.0 + 1, tile.position.1);
+                if let Some(u) = self.get(up) {
+                    if u <= tile.height + 1 {
+                        if !list.iter().any(|f| f.position == up) && !list2.iter().any(|f| f.position == up) {
+                            list2.push(Tile {
+                                position: up,
+                                height: u,
+                                distance: tile.distance + 1,
+                            });
+                        }
+                    }
+                }
+                if let Some(d) = self.get(down) {
+                    if d <= tile.height + 1 {
+                        if !list.iter().any(|f| f.position == down) && !list2.iter().any(|f| f.position == down) {
+                            list2.push(Tile {
+                                position: down,
+                                height: d,
+                                distance: tile.distance + 1,
+                            });
+                        }
+                    }
+                }
+                if let Some(l) = self.get(left) {
+                    if l <= tile.height + 1 {
+                        if !list.iter().any(|f| f.position == left) && !list2.iter().any(|f| f.position == left) {
+                            list2.push(Tile {
+                                position: left,
+                                height: l,
+                                distance: tile.distance + 1,
+                            });
+                        }
+                    }
+                }
+                if let Some(r) = self.get(right) {
+                    if r <= tile.height + 1 {
+                        if !list.iter().any(|f| f.position == right) && !list2.iter().any(|f| f.position == right) {
+                            list2.push(Tile {
+                                position: right,
+                                height: r,
+                                distance: tile.distance + 1,
+                            });
+                        }
+                    }
+                }
+            }
+            num_to_skip = list2.len();
+            list.append(&mut list2);
+            if num_to_skip == 0 {
+                // This point cannot reach the end
+                println!("stuck! {:?}", list.first().unwrap().position);
+                return Ok(usize::MAX);
+            }
+            if let Some(tile) = list.iter().find(|x| x.position == end) {
+                println!("Found  {:?} = {}", list.first().unwrap().position, tile.distance);
+                return Ok(tile.distance);
+            }
+        }
+    }
 }
 
 struct Tile {
@@ -66,72 +140,7 @@ fn part1(input: &str) -> R<usize> {
         width: width.unwrap(),
         height,
     };
-    let end = map.index_to_x_y(end);
-    let start = Tile {
-        position: map.index_to_x_y(start),
-        height: 'a' as u8,
-        distance: 0,
-    };
-    let mut list = vec![start];
-    let mut num_to_skip = 0;
-    loop {
-        let mut list2: Vec<Tile> = vec![];
-        for tile in &list[num_to_skip..list.len()] {
-            let up = (tile.position.0, tile.position.1 - 1);
-            let down = (tile.position.0, tile.position.1 + 1);
-            let left = (tile.position.0 - 1, tile.position.1);
-            let right = (tile.position.0 + 1, tile.position.1);
-            if let Some(u) = map.get(up) {
-                if u <= tile.height + 1 {
-                    if !list.iter().any(|f| f.position == up) && !list2.iter().any(|f| f.position == up) {
-                        list2.push(Tile {
-                            position: up,
-                            height: u,
-                            distance: tile.distance + 1,
-                        });
-                    }
-                }
-            }
-            if let Some(d) = map.get(down) {
-                if d <= tile.height + 1 {
-                    if !list.iter().any(|f| f.position == down) && !list2.iter().any(|f| f.position == down) {
-                        list2.push(Tile {
-                            position: down,
-                            height: d,
-                            distance: tile.distance + 1,
-                        });
-                    }
-                }
-            }
-            if let Some(l) = map.get(left) {
-                if l <= tile.height + 1 {
-                    if !list.iter().any(|f| f.position == left) && !list2.iter().any(|f| f.position == left) {
-                        list2.push(Tile {
-                            position: left,
-                            height: l,
-                            distance: tile.distance + 1,
-                        });
-                    }
-                }
-            }
-            if let Some(r) = map.get(right) {
-                if r <= tile.height + 1 {
-                    if !list.iter().any(|f| f.position == right) && !list2.iter().any(|f| f.position == right) {
-                        list2.push(Tile {
-                            position: right,
-                            height: r,
-                            distance: tile.distance + 1,
-                        });
-                    }
-                }
-            }
-        }
-        num_to_skip = list2.len();
-        list.append(&mut list2);
-        if let Some(tile) = list.iter().find(|x| x.position == end) {
-            return Ok(tile.distance);
-        }
-    }
+    map.calc_distance(start, end)
 }
 
 fn part2(input: &str) -> R<usize> {
@@ -161,90 +170,20 @@ fn part2(input: &str) -> R<usize> {
         .filter(|(_, c)| **c == 'a' as u8)
         .map(|(i, _)| i.to_owned())
         .collect::<Vec<_>>();
-    let total = starts.len();
-    let mut solutions = vec![];
-    let mut current = 0;
-    'next: for index in starts {
-        current += 1;
-        let map = Map {
-            tiles: tiles.clone(),
-            width: width.unwrap(),
-            height,
-        };
-        let end = map.index_to_x_y(end);
-        let start = Tile {
-            position: map.index_to_x_y(index),
-            height: 'a' as u8,
-            distance: 0,
-        };
-        let mut list = vec![start];
-        let mut num_to_skip = 0;
-        loop {
-            let mut list2: Vec<Tile> = vec![];
-            for tile in &list[num_to_skip..list.len()] {
-                let up = (tile.position.0, tile.position.1 - 1);
-                let down = (tile.position.0, tile.position.1 + 1);
-                let left = (tile.position.0 - 1, tile.position.1);
-                let right = (tile.position.0 + 1, tile.position.1);
-                if let Some(u) = map.get(up) {
-                    if u <= tile.height + 1 {
-                        if !list.iter().any(|f| f.position == up) && !list2.iter().any(|f| f.position == up) {
-                            list2.push(Tile {
-                                position: up,
-                                height: u,
-                                distance: tile.distance + 1,
-                            });
-                        }
-                    }
-                }
-                if let Some(d) = map.get(down) {
-                    if d <= tile.height + 1 {
-                        if !list.iter().any(|f| f.position == down) && !list2.iter().any(|f| f.position == down) {
-                            list2.push(Tile {
-                                position: down,
-                                height: d,
-                                distance: tile.distance + 1,
-                            });
-                        }
-                    }
-                }
-                if let Some(l) = map.get(left) {
-                    if l <= tile.height + 1 {
-                        if !list.iter().any(|f| f.position == left) && !list2.iter().any(|f| f.position == left) {
-                            list2.push(Tile {
-                                position: left,
-                                height: l,
-                                distance: tile.distance + 1,
-                            });
-                        }
-                    }
-                }
-                if let Some(r) = map.get(right) {
-                    if r <= tile.height + 1 {
-                        if !list.iter().any(|f| f.position == right) && !list2.iter().any(|f| f.position == right) {
-                            list2.push(Tile {
-                                position: right,
-                                height: r,
-                                distance: tile.distance + 1,
-                            });
-                        }
-                    }
-                }
-            }
-            num_to_skip = list2.len();
-            list.append(&mut list2);
-            if num_to_skip == 0 {
-                println!("stuck! {:?} {}/{}", list.first().unwrap().position, current, total);
-                continue 'next;
-            }
-            if let Some(tile) = list.iter().find(|x| x.position == end) {
-                println!("Add {} {}/{}", tile.distance, current, total);
-                solutions.push(tile.distance);
-                continue 'next;
-            }
-        }
-    }
-    Ok(solutions.into_iter().min().unwrap())
+    // Run all calculations in parallel and return the minimum
+    Ok(starts
+        .into_par_iter()
+        .map(|start| {
+            let map = Map {
+                tiles: tiles.clone(),
+                width: width.unwrap(),
+                height,
+            };
+            let dist = map.calc_distance(start, end).unwrap();
+            dist
+        })
+        .min()
+        .unwrap())
 }
 
 #[cfg(test)]
