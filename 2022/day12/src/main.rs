@@ -133,13 +133,12 @@ impl Map {
         }
     }
 
-    fn calc_distance_from_end_memoize(&mut self, start: usize, end: usize) -> R<Vec<Tile>> {
+    fn calc_all_distances(&mut self, end: usize) -> R<Vec<Tile>> {
         let start_tile = Tile {
             position: self.index_to_x_y(end),
             height: b'z',
             distance: 0,
         };
-        let end = self.index_to_x_y(start);
         let mut all_tiles = vec![start_tile];
         let mut num_to_skip = 0;
         loop {
@@ -166,18 +165,14 @@ impl Map {
                 println!("stuck! {:?}", all_tiles.first().unwrap().position);
                 return Ok(all_tiles);
             }
-            if let Some(tile) = all_tiles.iter().find(|x| x.position == end) {
-                #[cfg(debug)]
-                println!("Found  {:?} = {}", all_tiles.first().unwrap().position, tile.distance);
-            }
         }
     }
     /// Determines if the new tile
     fn is_tile_new_and_navigable(
         &self,
         position: (isize, isize),
-        all_tiles: &Vec<Tile>,
-        new_tiles: &Vec<Tile>,
+        all_tiles: &[Tile],
+        new_tiles: &[Tile],
         tile: &Tile,
         from_end: bool,
     ) -> Option<Tile> {
@@ -193,7 +188,7 @@ impl Map {
                     && !new_tiles.iter().any(|f| f.position == position)
                 {
                     Some(Tile {
-                        position: position,
+                        position,
                         height: u,
                         distance: tile.distance + 1,
                     })
@@ -338,11 +333,11 @@ fn part2_calc_all_and_cache(input: &str) -> R<usize> {
     let mut min = usize::MAX;
 
     let mut map = Map {
-        tiles: tiles.clone(),
+        tiles,
         width: width.unwrap(),
         height,
     };
-    let tiles = map.calc_distance_from_end_memoize(0, end).unwrap();
+    let tiles = map.calc_all_distances(end).unwrap();
     for start in starts {
         match tiles
             .iter()
