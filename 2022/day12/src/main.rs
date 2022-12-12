@@ -1,4 +1,4 @@
-use std::{num, os::windows, vec};
+use std::{vec};
 
 use common::*;
 use rayon::prelude::*;
@@ -35,7 +35,7 @@ impl Map {
         let end = self.index_to_x_y(end);
         let start = Tile {
             position: self.index_to_x_y(start),
-            height: 'a' as u8,
+            height: b'a',
             distance: 0,
         };
         let mut list = vec![start];
@@ -48,47 +48,39 @@ impl Map {
                 let left = (tile.position.0 - 1, tile.position.1);
                 let right = (tile.position.0 + 1, tile.position.1);
                 if let Some(u) = self.get(up) {
-                    if u <= tile.height + 1 {
-                        if !list.iter().any(|f| f.position == up) && !list2.iter().any(|f| f.position == up) {
-                            list2.push(Tile {
-                                position: up,
-                                height: u,
-                                distance: tile.distance + 1,
-                            });
-                        }
+                    if u <= tile.height + 1 && !list.iter().any(|f| f.position == up) && !list2.iter().any(|f| f.position == up) {
+                        list2.push(Tile {
+                            position: up,
+                            height: u,
+                            distance: tile.distance + 1,
+                        });
                     }
                 }
                 if let Some(d) = self.get(down) {
-                    if d <= tile.height + 1 {
-                        if !list.iter().any(|f| f.position == down) && !list2.iter().any(|f| f.position == down) {
-                            list2.push(Tile {
-                                position: down,
-                                height: d,
-                                distance: tile.distance + 1,
-                            });
-                        }
+                    if d <= tile.height + 1 && !list.iter().any(|f| f.position == down) && !list2.iter().any(|f| f.position == down) {
+                        list2.push(Tile {
+                            position: down,
+                            height: d,
+                            distance: tile.distance + 1,
+                        });
                     }
                 }
                 if let Some(l) = self.get(left) {
-                    if l <= tile.height + 1 {
-                        if !list.iter().any(|f| f.position == left) && !list2.iter().any(|f| f.position == left) {
-                            list2.push(Tile {
-                                position: left,
-                                height: l,
-                                distance: tile.distance + 1,
-                            });
-                        }
+                    if l <= tile.height + 1 && !list.iter().any(|f| f.position == left) && !list2.iter().any(|f| f.position == left) {
+                        list2.push(Tile {
+                            position: left,
+                            height: l,
+                            distance: tile.distance + 1,
+                        });
                     }
                 }
                 if let Some(r) = self.get(right) {
-                    if r <= tile.height + 1 {
-                        if !list.iter().any(|f| f.position == right) && !list2.iter().any(|f| f.position == right) {
-                            list2.push(Tile {
-                                position: right,
-                                height: r,
-                                distance: tile.distance + 1,
-                            });
-                        }
+                    if r <= tile.height + 1 && !list.iter().any(|f| f.position == right) && !list2.iter().any(|f| f.position == right) {
+                        list2.push(Tile {
+                            position: right,
+                            height: r,
+                            distance: tile.distance + 1,
+                        });
                     }
                 }
             }
@@ -130,8 +122,8 @@ fn part1(input: &str) -> R<usize> {
     let tiles: Vec<u8> = tiles
         .into_iter()
         .map(|x| match x {
-            'S' => 'a' as u8,
-            'E' => 'z' as u8,
+            'S' => b'a',
+            'E' => b'z',
             _ => x as u8,
         })
         .collect();
@@ -159,15 +151,15 @@ fn part2(input: &str) -> R<usize> {
     let tiles: Vec<u8> = tiles
         .into_iter()
         .map(|x| match x {
-            'S' => 'a' as u8,
-            'E' => 'z' as u8,
+            'S' => b'a',
+            'E' => b'z',
             _ => x as u8,
         })
         .collect();
     let starts = tiles
         .iter()
         .enumerate()
-        .filter(|(_, c)| **c == 'a' as u8)
+        .filter(|(_, c)| **c == b'a')
         .map(|(i, _)| i.to_owned())
         .collect::<Vec<_>>();
     // Run all calculations in parallel and return the minimum
