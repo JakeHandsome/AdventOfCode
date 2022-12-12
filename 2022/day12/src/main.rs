@@ -6,12 +6,20 @@ use rayon::prelude::*;
 fn main() {
     let input = read_input_file_for_project_as_string!();
     {
-        let _timer = Timer::new("Part 1");
-        println!("Part1: {}", part1(&input).unwrap());
+        let _timer = Timer::new("Part 1 from_start");
+        println!("Part1: {}", part1(&input, false).unwrap());
     }
     {
-        let _timer = Timer::new("Part 2");
-        println!("Part2: {}", part2(&input).unwrap());
+        let _timer = Timer::new("Part 1 from_end");
+        println!("Part1: {}", part1(&input, true).unwrap());
+    }
+    {
+        let _timer = Timer::new("Part 2 from_start");
+        println!("Part2: {}", part2(&input, false).unwrap());
+    }
+    {
+        let _timer = Timer::new("Part 2 from_end");
+        println!("Part2: {}", part2(&input, true).unwrap());
     }
 }
 
@@ -38,7 +46,7 @@ impl Map {
         }
     }
 
-    fn calc_distance(&self, start: usize, end: usize) -> R<usize> {
+    fn calc_distance_from_start(&self, start: usize, end: usize) -> R<usize> {
         let end = self.index_to_x_y(end);
         let start = Tile {
             position: self.index_to_x_y(start),
@@ -56,52 +64,11 @@ impl Map {
                 let down = (tile.position.0, tile.position.1 + 1);
                 let left = (tile.position.0 - 1, tile.position.1);
                 let right = (tile.position.0 + 1, tile.position.1);
-                if let Some(u) = self.get(up) {
-                    if u <= tile.height + 1
-                        && !all_tiles.iter().any(|f| f.position == up)
-                        && !new_tiles.iter().any(|f| f.position == up)
+                for position in [up, down, left, right] {
+                    if let Some(new_tile) =
+                        self.is_tile_new_and_navigable(position, &all_tiles, &new_tiles, tile, false)
                     {
-                        new_tiles.push(Tile {
-                            position: up,
-                            height: u,
-                            distance: tile.distance + 1,
-                        });
-                    }
-                }
-                if let Some(d) = self.get(down) {
-                    if d <= tile.height + 1
-                        && !all_tiles.iter().any(|f| f.position == down)
-                        && !new_tiles.iter().any(|f| f.position == down)
-                    {
-                        new_tiles.push(Tile {
-                            position: down,
-                            height: d,
-                            distance: tile.distance + 1,
-                        });
-                    }
-                }
-                if let Some(l) = self.get(left) {
-                    if l <= tile.height + 1
-                        && !all_tiles.iter().any(|f| f.position == left)
-                        && !new_tiles.iter().any(|f| f.position == left)
-                    {
-                        new_tiles.push(Tile {
-                            position: left,
-                            height: l,
-                            distance: tile.distance + 1,
-                        });
-                    }
-                }
-                if let Some(r) = self.get(right) {
-                    if r <= tile.height + 1
-                        && !all_tiles.iter().any(|f| f.position == right)
-                        && !new_tiles.iter().any(|f| f.position == right)
-                    {
-                        new_tiles.push(Tile {
-                            position: right,
-                            height: r,
-                            distance: tile.distance + 1,
-                        });
+                        new_tiles.push(new_tile)
                     }
                 }
             }
@@ -120,6 +87,80 @@ impl Map {
             }
         }
     }
+
+    fn calc_distance_from_end(&self, start: usize, end: usize) -> R<usize> {
+        let start_tile = Tile {
+            position: self.index_to_x_y(end),
+            height: b'z',
+            distance: 0,
+        };
+        let end = self.index_to_x_y(start);
+        let mut all_tiles = vec![start_tile];
+        let mut num_to_skip = 0;
+        loop {
+            let mut new_tiles: Vec<Tile> = vec![];
+            // only process the new tiles addec
+            for tile in &all_tiles[num_to_skip..all_tiles.len()] {
+                // Check the up down left right for each new tile
+                let up = (tile.position.0, tile.position.1 - 1);
+                let down = (tile.position.0, tile.position.1 + 1);
+                let left = (tile.position.0 - 1, tile.position.1);
+                let right = (tile.position.0 + 1, tile.position.1);
+                for position in [up, down, left, right] {
+                    if let Some(new_tile) = self.is_tile_new_and_navigable(position, &all_tiles, &new_tiles, tile, true)
+                    {
+                        new_tiles.push(new_tile)
+                    }
+                }
+            }
+            num_to_skip = new_tiles.len();
+            all_tiles.append(&mut new_tiles);
+            if num_to_skip == 0 {
+                // This point cannot reach the end
+                #[cfg(debug)]
+                println!("stuck! {:?}", all_tiles.first().unwrap().position);
+                return Ok(usize::MAX);
+            }
+            if let Some(tile) = all_tiles.iter().find(|x| x.position == end) {
+                #[cfg(debug)]
+                println!("Found  {:?} = {}", all_tiles.first().unwrap().position, tile.distance);
+                return Ok(tile.distance);
+            }
+        }
+    }
+
+    /// Determines if the new tile
+    fn is_tile_new_and_navigable(
+        &self,
+        position: (isize, isize),
+        all_tiles: &Vec<Tile>,
+        new_tiles: &Vec<Tile>,
+        tile: &Tile,
+        from_end: bool,
+    ) -> Option<Tile> {
+        match self.get(position) {
+            Some(u) => {
+                let navigable = if from_end {
+                    tile.height <= u + 1
+                } else {
+                    u <= tile.height + 1
+                };
+                if navigable
+                    && !all_tiles.iter().any(|f| f.position == position) // Check for new
+                    && !new_tiles.iter().any(|f| f.position == position)
+                {
+                    Some(Tile {
+                        position: position,
+                        height: u,
+                        distance: tile.distance + 1,
+                    })
+                } else {
+                    None
+                }
+            }
+            None => None,
+        }
+    }
 }
 
 struct Tile {
@@ -128,7 +169,7 @@ struct Tile {
     distance: usize,
 }
 
-fn part1(input: &str) -> R<usize> {
+fn part1(input: &str, from_end: bool) -> R<usize> {
     let mut tiles: Vec<char> = vec![];
     let mut width = None;
     let height = input.lines().count();
@@ -155,10 +196,14 @@ fn part1(input: &str) -> R<usize> {
         width: width.unwrap(),
         height,
     };
-    map.calc_distance(start, end)
+    if from_end {
+        map.calc_distance_from_end(start, end)
+    } else {
+        map.calc_distance_from_start(start, end)
+    }
 }
 
-fn part2(input: &str) -> R<usize> {
+fn part2(input: &str, from_end: bool) -> R<usize> {
     let mut tiles: Vec<char> = vec![];
     let mut width = None;
     let height = input.lines().count();
@@ -187,19 +232,35 @@ fn part2(input: &str) -> R<usize> {
         .map(|(i, _)| i.to_owned())
         .collect::<Vec<_>>();
     // Run all calculations in parallel and return the minimum
-    Ok(starts
-        .into_par_iter()
-        .map(|start| {
-            let map = Map {
-                tiles: tiles.clone(),
-                width: width.unwrap(),
-                height,
-            };
-            let dist = map.calc_distance(start, end).unwrap();
-            dist
-        })
-        .min()
-        .unwrap())
+    if from_end {
+        Ok(starts
+            .into_par_iter()
+            .map(|start| {
+                let map = Map {
+                    tiles: tiles.clone(),
+                    width: width.unwrap(),
+                    height,
+                };
+                let dist = map.calc_distance_from_end(start, end).unwrap();
+                dist
+            })
+            .min()
+            .unwrap())
+    } else {
+        Ok(starts
+            .into_par_iter()
+            .map(|start| {
+                let map = Map {
+                    tiles: tiles.clone(),
+                    width: width.unwrap(),
+                    height,
+                };
+                let dist = map.calc_distance_from_start(start, end).unwrap();
+                dist
+            })
+            .min()
+            .unwrap())
+    }
 }
 
 #[cfg(test)]
