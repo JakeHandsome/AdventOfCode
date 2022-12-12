@@ -4,6 +4,7 @@ use std::{
     fs::{self, File},
     io::{self, BufRead, BufReader, Lines},
     path::Path,
+    time,
 };
 
 // Short hand result type for a dyn Error
@@ -87,6 +88,33 @@ fn download_file_if_doesnt_exist(input: &Path) -> Result<(), Box<dyn Error>> {
         Err(Box::new(AdventOfCodeError::new(
             "Cannot download files other than 'Input.txt'",
         )))
+    }
+}
+
+pub struct Timer {
+    message: String,
+    start_time: time::SystemTime,
+}
+
+impl Timer {
+    pub fn new<S>(message: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Timer {
+            message: message.into(),
+            start_time: time::SystemTime::now(),
+        }
+    }
+}
+
+impl Drop for Timer {
+    fn drop(&mut self) {
+        println!(
+            "Time of {}, {}ms",
+            self.message,
+            self.start_time.elapsed().unwrap().as_millis()
+        )
     }
 }
 

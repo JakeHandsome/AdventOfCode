@@ -5,8 +5,14 @@ use rayon::prelude::*;
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
-    println!("Part1: {}", part1(&input).unwrap());
-    println!("Part2: {}", part2(&input).unwrap());
+    {
+        let _timer = Timer::new("Part 1");
+        println!("Part1: {}", part1(&input).unwrap());
+    }
+    {
+        let _timer = Timer::new("Part 2");
+        println!("Part2: {}", part2(&input).unwrap());
+    }
 }
 
 struct Map {
@@ -103,10 +109,12 @@ impl Map {
             all_tiles.append(&mut new_tiles);
             if num_to_skip == 0 {
                 // This point cannot reach the end
+                #[cfg(debug)]
                 println!("stuck! {:?}", all_tiles.first().unwrap().position);
                 return Ok(usize::MAX);
             }
             if let Some(tile) = all_tiles.iter().find(|x| x.position == end) {
+                #[cfg(debug)]
                 println!("Found  {:?} = {}", all_tiles.first().unwrap().position, tile.distance);
                 return Ok(tile.distance);
             }
