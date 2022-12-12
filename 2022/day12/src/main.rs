@@ -1,4 +1,4 @@
-use std::{vec};
+use std::vec;
 
 use common::*;
 use rayon::prelude::*;
@@ -31,6 +31,7 @@ impl Map {
             Some(self.tiles[y * self.width + x])
         }
     }
+
     fn calc_distance(&self, start: usize, end: usize) -> R<usize> {
         let end = self.index_to_x_y(end);
         let start = Tile {
@@ -38,18 +39,23 @@ impl Map {
             height: b'a',
             distance: 0,
         };
-        let mut list = vec![start];
+        let mut all_tiles = vec![start];
         let mut num_to_skip = 0;
         loop {
-            let mut list2: Vec<Tile> = vec![];
-            for tile in &list[num_to_skip..list.len()] {
+            let mut new_tiles: Vec<Tile> = vec![];
+            // only process the new tiles addec
+            for tile in &all_tiles[num_to_skip..all_tiles.len()] {
+                // Check the up down left right for each new tile
                 let up = (tile.position.0, tile.position.1 - 1);
                 let down = (tile.position.0, tile.position.1 + 1);
                 let left = (tile.position.0 - 1, tile.position.1);
                 let right = (tile.position.0 + 1, tile.position.1);
                 if let Some(u) = self.get(up) {
-                    if u <= tile.height + 1 && !list.iter().any(|f| f.position == up) && !list2.iter().any(|f| f.position == up) {
-                        list2.push(Tile {
+                    if u <= tile.height + 1
+                        && !all_tiles.iter().any(|f| f.position == up)
+                        && !new_tiles.iter().any(|f| f.position == up)
+                    {
+                        new_tiles.push(Tile {
                             position: up,
                             height: u,
                             distance: tile.distance + 1,
@@ -57,8 +63,11 @@ impl Map {
                     }
                 }
                 if let Some(d) = self.get(down) {
-                    if d <= tile.height + 1 && !list.iter().any(|f| f.position == down) && !list2.iter().any(|f| f.position == down) {
-                        list2.push(Tile {
+                    if d <= tile.height + 1
+                        && !all_tiles.iter().any(|f| f.position == down)
+                        && !new_tiles.iter().any(|f| f.position == down)
+                    {
+                        new_tiles.push(Tile {
                             position: down,
                             height: d,
                             distance: tile.distance + 1,
@@ -66,8 +75,11 @@ impl Map {
                     }
                 }
                 if let Some(l) = self.get(left) {
-                    if l <= tile.height + 1 && !list.iter().any(|f| f.position == left) && !list2.iter().any(|f| f.position == left) {
-                        list2.push(Tile {
+                    if l <= tile.height + 1
+                        && !all_tiles.iter().any(|f| f.position == left)
+                        && !new_tiles.iter().any(|f| f.position == left)
+                    {
+                        new_tiles.push(Tile {
                             position: left,
                             height: l,
                             distance: tile.distance + 1,
@@ -75,8 +87,11 @@ impl Map {
                     }
                 }
                 if let Some(r) = self.get(right) {
-                    if r <= tile.height + 1 && !list.iter().any(|f| f.position == right) && !list2.iter().any(|f| f.position == right) {
-                        list2.push(Tile {
+                    if r <= tile.height + 1
+                        && !all_tiles.iter().any(|f| f.position == right)
+                        && !new_tiles.iter().any(|f| f.position == right)
+                    {
+                        new_tiles.push(Tile {
                             position: right,
                             height: r,
                             distance: tile.distance + 1,
@@ -84,15 +99,15 @@ impl Map {
                     }
                 }
             }
-            num_to_skip = list2.len();
-            list.append(&mut list2);
+            num_to_skip = new_tiles.len();
+            all_tiles.append(&mut new_tiles);
             if num_to_skip == 0 {
                 // This point cannot reach the end
-                println!("stuck! {:?}", list.first().unwrap().position);
+                println!("stuck! {:?}", all_tiles.first().unwrap().position);
                 return Ok(usize::MAX);
             }
-            if let Some(tile) = list.iter().find(|x| x.position == end) {
-                println!("Found  {:?} = {}", list.first().unwrap().position, tile.distance);
+            if let Some(tile) = all_tiles.iter().find(|x| x.position == end) {
+                println!("Found  {:?} = {}", all_tiles.first().unwrap().position, tile.distance);
                 return Ok(tile.distance);
             }
         }
@@ -156,6 +171,7 @@ fn part2(input: &str) -> R<usize> {
             _ => x as u8,
         })
         .collect();
+    // Get all the start indexes
     let starts = tiles
         .iter()
         .enumerate()
