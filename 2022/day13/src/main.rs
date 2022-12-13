@@ -45,20 +45,21 @@ fn part1(input: &str) -> R<usize> {
         match pair.left.cmp(&pair.right) {
             std::cmp::Ordering::Less => {
                 result += i + 1;
-                continue;
             }
             std::cmp::Ordering::Equal => unreachable!(),
-            std::cmp::Ordering::Greater => continue,
+            std::cmp::Ordering::Greater => (),
         };
     }
     #[cfg(not(test))]
     {
+        // 5999 was first incorrect guess and it was too low
         assert!(result > 5999);
     }
     Ok(result)
 }
 
 fn part2(input: &str) -> R<usize> {
+    // Add the marker packets
     let mut packets = vec![Packet::new("[[2]]".into()), Packet::new("[[6]]".into())];
     for chunk in input.lines().collect::<Vec<_>>().chunks(3) {
         packets.push(Packet::new(chunk[0].into()));
@@ -68,7 +69,7 @@ fn part2(input: &str) -> R<usize> {
     let result = packets
         .into_iter()
         .enumerate()
-        .filter(|x| format!("{}", x.1) == "[[2]]" || format!("{}", x.1) == "[[6]]")
+        .filter(|x| x.1.to_string() == "[[2]]" || x.1.to_string() == "[[6]]")
         .map(|x| x.0 + 1)
         .product();
     Ok(result)

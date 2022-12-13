@@ -9,6 +9,7 @@ use std::fmt::Display;
 use Packet::*;
 
 impl Packet {
+    // Parses a packet from an input string
     pub fn new(input: String) -> Self {
         if input.starts_with('[') {
             let mut split = input[1..input.len() - 1].split(',').peekable();
@@ -50,6 +51,7 @@ impl PartialOrd for Packet {
     }
 }
 
+// Packet comarison
 impl Ord for Packet {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         let left = self;
@@ -83,6 +85,7 @@ impl Ord for Packet {
     }
 }
 
+// Packet ToString, converts back to the original input
 impl Display for Packet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
