@@ -55,7 +55,6 @@ fn part2(input: &str) -> R<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const SAMPLE1: &str = r#""#;
     #[test]
     fn p1_test() {
         assert_eq!(part1(">").unwrap(), 2);
