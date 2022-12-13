@@ -162,7 +162,7 @@ fn part2(input: &str) -> R<usize> {
     let result = packets
         .into_iter()
         .enumerate()
-        .filter(|x| format!("{}", x.1) == "[[2]]" || format!("{}", x.1) == "[[6]]")
+        .filter(|x| x.1.to_string() == "[[2]]" || x.1.to_string() == "[[6]]")
         .map(|x| x.0 + 1)
         .product();
     Ok(result)
