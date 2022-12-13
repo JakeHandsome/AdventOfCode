@@ -14,33 +14,33 @@ fn main() {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, PartialOrd, Clone)]
-enum Data {
+#[derive(Debug, Eq, PartialEq, Clone)]
+enum Packet {
     Value(usize),
-    Array(Vec<Data>),
+    Array(Vec<Packet>),
     Empty,
 }
 
-impl Data {
+impl Packet {
     fn new(input: String) -> Self {
-        if input.starts_with("[") {
-            let mut split = input[1..input.len() - 1].split(",").peekable();
-            let mut elements: Vec<Data> = vec![];
+        if input.starts_with('[') {
+            let mut split = input[1..input.len() - 1].split(',').peekable();
+            let mut elements: Vec<Packet> = vec![];
             let mut current = "".to_string();
-            while split.peek().is_some() || current != "".to_string() {
+            while split.peek().is_some() || current != *"" {
                 if current.is_empty() {
                     current = split.next().unwrap().into()
                 }
                 let numopen = current.chars().filter(|c| *c == '[').count();
                 let numclose = current.chars().filter(|c| *c == ']').count();
-                if (current.contains("[")
-                    && current.contains("]")
+                if (current.contains('[')
+                    && current.contains(']')
                         //Make sure the number of ] matches number of [
                 && numopen == numclose)
-                    || !current.contains("[") && !current.contains("]")
+                    || !current.contains('[') && !current.contains(']')
                 {
                     // This is an element or a value
-                    elements.push(Data::new(current.into()));
+                    elements.push(Packet::new(current));
                     current = "".into();
                 } else if numopen != numclose {
                     // Combine with next string
@@ -57,7 +57,13 @@ impl Data {
     }
 }
 
-impl Ord for Data {
+impl PartialOrd for Packet {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Packet {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         let left = self;
         let right = other;
@@ -66,8 +72,8 @@ impl Ord for Data {
             // Compare values
             (Value(left), Value(right)) => left.cmp(&right),
             // Convert value into array an compare
-            (Value(left), Array(right)) => compare(Array(vec![Value(left)]), Array(right)),
-            (Array(left), Value(right)) => compare(Array(left), Array(vec![Value(right)])),
+            (Value(left), Array(right)) => Array(vec![Value(left)]).cmp(&Array(right)),
+            (Array(left), Value(right)) => Array(left).cmp(&Array(vec![Value(right)])),
             // Right side end early
             (Array(_), Empty) | (Value(_), Empty) => Greater,
             // Left side end early
@@ -78,10 +84,10 @@ impl Ord for Data {
                 let mut right = right.into_iter();
                 match (left.next(), right.next()) {
                     (None, None) => Equal,
-                    (None, Some(x)) => compare(Empty, x),
-                    (Some(x), None) => compare(x, Empty),
-                    (Some(l), Some(r)) => match compare(l, r) {
-                        Equal => compare(Array(left.collect()), Array(right.collect())),
+                    (None, Some(x)) => Empty.cmp(&x),
+                    (Some(x), None) => x.cmp(&Empty),
+                    (Some(l), Some(r)) => match l.cmp(&r) {
+                        Equal => Array(left.collect()).cmp(&Array(right.collect())),
                         x => x,
                     },
                 }
@@ -90,7 +96,7 @@ impl Ord for Data {
     }
 }
 
-impl Display for Data {
+impl Display for Packet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Value(x) => f.write_fmt(format_args!("{}", x)),
@@ -105,15 +111,15 @@ impl Display for Data {
 
 #[derive(Debug)]
 struct Pair {
-    left: Data,
-    right: Data,
+    left: Packet,
+    right: Packet,
 }
 
 impl Pair {
     fn new(left: &str, right: &str) -> Self {
         Pair {
-            left: Data::new(left.into()),
-            right: Data::new(right.into()),
+            left: Packet::new(left.into()),
+            right: Packet::new(right.into()),
         }
     }
 }
@@ -124,68 +130,35 @@ impl Display for Pair {
     }
 }
 
-use Data::*;
-
-fn compare(left: Data, right: Data) -> std::cmp::Ordering {
-    use std::cmp::Ordering::*;
-    match (left, right) {
-        // Compare values
-        (Value(left), Value(right)) => left.cmp(&right),
-        // Convert value into array an compare
-        (Value(left), Array(right)) => compare(Array(vec![Value(left)]), Array(right)),
-        (Array(left), Value(right)) => compare(Array(left), Array(vec![Value(right)])),
-        // Right side end early
-        (Array(_), Empty) | (Value(_), Empty) => Greater,
-        // Left side end early
-        (Empty, Value(_)) | (Empty, Array(_)) => Less,
-        (Empty, Empty) => Equal,
-        (Array(left), Array(right)) => {
-            let mut left = left.into_iter();
-            let mut right = right.into_iter();
-            match (left.next(), right.next()) {
-                (None, None) => Equal,
-                (None, Some(x)) => compare(Empty, x),
-                (Some(x), None) => compare(x, Empty),
-                (Some(l), Some(r)) => match compare(l, r) {
-                    Equal => compare(Array(left.collect()), Array(right.collect())),
-                    x => x,
-                },
-            }
-        }
-    }
-}
+use Packet::*;
 
 fn part1(input: &str) -> R<usize> {
     let mut result = 0usize;
-    let mut index = vec![];
     for (i, chunk) in input.lines().collect::<Vec<_>>().chunks(3).enumerate() {
         let pair = Pair::new(chunk[0], chunk[1]);
-        match compare(pair.left, pair.right) {
+        match pair.left.cmp(&pair.right) {
             std::cmp::Ordering::Less => {
                 result += i + 1;
-                index.push(i + 1);
                 continue;
             }
             std::cmp::Ordering::Equal => unreachable!(),
             std::cmp::Ordering::Greater => continue,
         };
     }
-    println!("{:?}", index);
     #[cfg(not(test))]
     {
-        println!("{}", result);
         assert!(result > 5999);
     }
     Ok(result)
 }
 
 fn part2(input: &str) -> R<usize> {
-    let mut packets = vec![Data::new("[[2]]".into()), Data::new("[[6]]".into())];
+    let mut packets = vec![Packet::new("[[2]]".into()), Packet::new("[[6]]".into())];
     for chunk in input.lines().collect::<Vec<_>>().chunks(3) {
-        packets.push(Data::new(chunk[0].into()));
-        packets.push(Data::new(chunk[1].into()));
+        packets.push(Packet::new(chunk[0].into()));
+        packets.push(Packet::new(chunk[1].into()));
     }
-    packets.sort_by(|a, b| a.cmp(&b));
+    packets.sort();
     let result = packets
         .into_iter()
         .enumerate()
