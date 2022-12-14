@@ -53,15 +53,15 @@ fn sand_is_stable(cave_map: &mut Vec<CaveMatter>, x: usize, y: usize) -> bool {
         if cave_map[down_left].is_blocking() {
             if cave_map[down_right].is_blocking() {
                 cave_map[index] = Sand;
-                return true;
+                true
             } else {
-                return sand_is_stable(cave_map, x + 1, y + 1);
+                sand_is_stable(cave_map, x + 1, y + 1)
             }
         } else {
-            return sand_is_stable(cave_map, x - 1, y + 1);
+            sand_is_stable(cave_map, x - 1, y + 1)
         }
     } else {
-        return sand_is_stable(cave_map, x, y + 1);
+        sand_is_stable(cave_map, x, y + 1)
     }
 }
 
@@ -73,12 +73,12 @@ fn part2(input: &str) -> R<usize> {
         for points in line.split("->").collect::<Vec<_>>().windows(2) {
             let start = points[0]
                 .trim()
-                .split(",")
+                .split(',')
                 .map(|x| x.parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             let end = points[1]
                 .trim()
-                .split(",")
+                .split(',')
                 .map(|x| x.parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             use std::cmp::{max, min};
@@ -100,7 +100,7 @@ fn part2(input: &str) -> R<usize> {
     }
 
     // Keep adding sand until no longer stable
-    while true == sand_is_stable(&mut cave_map, 500, 0) {}
+    while sand_is_stable(&mut cave_map, 500, 0) {}
     #[cfg(test)]
     {
         for (i, cave_spot) in cave_map.iter().enumerate() {
@@ -112,7 +112,7 @@ fn part2(input: &str) -> R<usize> {
             };
             print!("{}", c);
             if i % 1000 == 999 {
-                print!("\n");
+                println!();
             }
         }
     }
@@ -126,12 +126,12 @@ fn part1(input: &str) -> R<usize> {
         for points in line.split("->").collect::<Vec<_>>().windows(2) {
             let start = points[0]
                 .trim()
-                .split(",")
+                .split(',')
                 .map(|x| x.parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             let end = points[1]
                 .trim()
-                .split(",")
+                .split(',')
                 .map(|x| x.parse::<usize>().unwrap())
                 .collect::<Vec<_>>();
             use std::cmp::{max, min};
@@ -145,7 +145,7 @@ fn part1(input: &str) -> R<usize> {
         }
     }
     // Keep adding sand until no longer stable
-    while true == sand_is_stable(&mut cave_map, 500, 0) {}
+    while sand_is_stable(&mut cave_map, 500, 0) {}
     #[cfg(test)]
     {
         for (i, cave_spot) in cave_map.iter().enumerate() {
@@ -157,7 +157,7 @@ fn part1(input: &str) -> R<usize> {
             };
             print!("{}", c);
             if i % 1000 == 999 {
-                print!("\n");
+                println!();
             }
         }
     }
