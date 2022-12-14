@@ -24,10 +24,8 @@ use CaveMatter::*;
 impl CaveMatter {
     fn is_blocking(&self) -> bool {
         match self {
-            Rock => true,
-            Air => false,
-            Sand => true,
-            SandEmitter => false,
+            Rock | Sand => true,
+            Air | SandEmitter => false,
         }
     }
 }
@@ -42,6 +40,7 @@ fn sand_is_stable(cave_map: &mut Vec<CaveMatter>, x: usize, y: usize) -> bool {
         return false;
     }
     let index = x_y_to_index(x, y);
+    // Part2, sand is not stable if original index is full
     if cave_map[index].is_blocking() {
         // Sand filled to top
         return false;
@@ -49,27 +48,30 @@ fn sand_is_stable(cave_map: &mut Vec<CaveMatter>, x: usize, y: usize) -> bool {
     let down = x_y_to_index(x, y + 1);
     let down_left = x_y_to_index(x - 1, y + 1);
     let down_right = x_y_to_index(x + 1, y + 1);
-    if cave_map[down].is_blocking() {
-        if cave_map[down_left].is_blocking() {
-            if cave_map[down_right].is_blocking() {
-                cave_map[index] = Sand;
-                true
-            } else {
-                sand_is_stable(cave_map, x + 1, y + 1)
-            }
-        } else {
-            sand_is_stable(cave_map, x - 1, y + 1)
-        }
-    } else {
-        sand_is_stable(cave_map, x, y + 1)
+    match cave_map[down].is_blocking() {
+        true => match cave_map[down_left].is_blocking() {
+            true => match cave_map[down_right].is_blocking() {
+                true => {
+                    // If everything is blocking, mark this node as Sand
+                    cave_map[index] = Sand;
+                    true
+                }
+                // Check the down_right location
+                false => sand_is_stable(cave_map, x + 1, y + 1),
+            },
+            // Check the down left location
+            false => sand_is_stable(cave_map, x - 1, y + 1),
+        },
+        // Check the down location
+        false => sand_is_stable(cave_map, x, y + 1),
     }
 }
 
-fn part2(input: &str) -> R<usize> {
+fn part1(input: &str) -> R<usize> {
     let mut cave_map = vec![Air; 1000 * 1000];
     cave_map[500] = SandEmitter;
-    let mut greatest_y = 0;
     for line in input.lines() {
+        // Use a sliding window to find all the lines to draw
         for points in line.split("->").collect::<Vec<_>>().windows(2) {
             let start = points[0]
                 .trim()
@@ -83,17 +85,68 @@ fn part2(input: &str) -> R<usize> {
                 .collect::<Vec<_>>();
             use std::cmp::{max, min};
 
+            // Set each point in the line
             for x in min(start[0], end[0])..=max(start[0], end[0]) {
                 for y in min(start[1], end[1])..=max(start[1], end[1]) {
-                    let index = x_y_to_index(x, y);
-                    if y > greatest_y {
-                        greatest_y = y;
-                    }
-                    cave_map[index] = Rock;
+                    cave_map[x_y_to_index(x, y)] = Rock;
                 }
             }
         }
     }
+
+    // Keep adding sand until no longer stable
+    while sand_is_stable(&mut cave_map, 500, 0) {}
+    #[cfg(test)]
+    {
+        // Print out the map in the test for sanity checking
+        for (i, cave_spot) in cave_map.iter().enumerate() {
+            let c = match cave_spot {
+                Rock => '#',
+                Air => '.',
+                Sand => 'o',
+                SandEmitter => '+',
+            };
+            print!("{}", c);
+            if i % 1000 == 999 {
+                println!();
+            }
+        }
+    }
+    Ok(cave_map.into_iter().filter(|x| *x == Sand).count())
+}
+
+fn part2(input: &str) -> R<usize> {
+    let mut cave_map = vec![Air; 1000 * 1000];
+    cave_map[500] = SandEmitter;
+    // Find the greatest t for drawing the floor
+    let mut greatest_y = 0;
+    for line in input.lines() {
+        // Use a sliding window to find all the lines to draw
+        for points in line.split("->").collect::<Vec<_>>().windows(2) {
+            let start = points[0]
+                .trim()
+                .split(',')
+                .map(|x| x.parse::<usize>().unwrap())
+                .collect::<Vec<_>>();
+            let end = points[1]
+                .trim()
+                .split(',')
+                .map(|x| x.parse::<usize>().unwrap())
+                .collect::<Vec<_>>();
+            use std::cmp::{max, min};
+
+            // Set each point in the line
+            for x in min(start[0], end[0])..=max(start[0], end[0]) {
+                for y in min(start[1], end[1])..=max(start[1], end[1]) {
+                    if y > greatest_y {
+                        greatest_y = y;
+                    }
+                    cave_map[x_y_to_index(x, y)] = Rock;
+                }
+            }
+        }
+    }
+    // Draw the floor
     for x in 0..1000 {
         let y = greatest_y + 2;
         cave_map[x_y_to_index(x, y)] = Rock;
@@ -103,6 +156,7 @@ fn part2(input: &str) -> R<usize> {
     while sand_is_stable(&mut cave_map, 500, 0) {}
     #[cfg(test)]
     {
+        // Print out the map in the test for sanity checking
         for (i, cave_spot) in cave_map.iter().enumerate() {
             let c = match cave_spot {
                 Rock => '#',
@@ -118,52 +172,6 @@ fn part2(input: &str) -> R<usize> {
     }
     Ok(cave_map.into_iter().filter(|x| *x == Sand).count())
 }
-
-fn part1(input: &str) -> R<usize> {
-    let mut cave_map = vec![Air; 1000 * 1000];
-    cave_map[500] = SandEmitter;
-    for line in input.lines() {
-        for points in line.split("->").collect::<Vec<_>>().windows(2) {
-            let start = points[0]
-                .trim()
-                .split(',')
-                .map(|x| x.parse::<usize>().unwrap())
-                .collect::<Vec<_>>();
-            let end = points[1]
-                .trim()
-                .split(',')
-                .map(|x| x.parse::<usize>().unwrap())
-                .collect::<Vec<_>>();
-            use std::cmp::{max, min};
-
-            for x in min(start[0], end[0])..=max(start[0], end[0]) {
-                for y in min(start[1], end[1])..=max(start[1], end[1]) {
-                    let index = y * 1000 + x;
-                    cave_map[index] = Rock;
-                }
-            }
-        }
-    }
-    // Keep adding sand until no longer stable
-    while sand_is_stable(&mut cave_map, 500, 0) {}
-    #[cfg(test)]
-    {
-        for (i, cave_spot) in cave_map.iter().enumerate() {
-            let c = match cave_spot {
-                Rock => '#',
-                Air => '.',
-                Sand => 'o',
-                SandEmitter => '+',
-            };
-            print!("{}", c);
-            if i % 1000 == 999 {
-                println!();
-            }
-        }
-    }
-    Ok(cave_map.into_iter().filter(|x| *x == Sand).count())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
