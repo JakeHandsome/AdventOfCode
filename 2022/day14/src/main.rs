@@ -34,6 +34,10 @@ fn x_y_to_index(x: usize, y: usize) -> usize {
     y * 1000 + x
 }
 
+fn index_to_x_y(i: usize) -> (usize, usize) {
+    (i % 1000, i / 1000)
+}
+
 fn sand_is_stable(cave_map: &mut Vec<CaveMatter>, x: usize, y: usize) -> bool {
     if x >= 999 || y >= 999 {
         // Fell off the map
@@ -57,13 +61,22 @@ fn sand_is_stable(cave_map: &mut Vec<CaveMatter>, x: usize, y: usize) -> bool {
                     true
                 }
                 // Check the down_right location
-                false => sand_is_stable(cave_map, x + 1, y + 1),
+                false => {
+                    let (x, y) = index_to_x_y(down_right);
+                    sand_is_stable(cave_map, x, y)
+                }
             },
             // Check the down left location
-            false => sand_is_stable(cave_map, x - 1, y + 1),
+            false => {
+                let (x, y) = index_to_x_y(down_left);
+                sand_is_stable(cave_map, x, y)
+            }
         },
         // Check the down location
-        false => sand_is_stable(cave_map, x, y + 1),
+        false => {
+            let (x, y) = index_to_x_y(down);
+            sand_is_stable(cave_map, x, y)
+        }
     }
 }
 
@@ -73,6 +86,7 @@ fn part1(input: &str) -> R<usize> {
     for line in input.lines() {
         // Use a sliding window to find all the lines to draw
         for points in line.split("->").collect::<Vec<_>>().windows(2) {
+            // Covert string "a,b" into vec![a,b]
             let start = points[0]
                 .trim()
                 .split(',')
