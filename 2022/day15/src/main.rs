@@ -26,7 +26,7 @@ impl Point {
     }
 }
 
-fn part1(input: &str, y_val: isize) -> R<usize> {
+fn parse_input(input: &str) -> R<Vec<(Point, Point)>> {
     let mut points = vec![];
     for line in input.lines() {
         let split = line.split(':').collect::<Vec<_>>();
@@ -47,6 +47,11 @@ fn part1(input: &str, y_val: isize) -> R<usize> {
             },
         ));
     }
+    Ok(points)
+}
+
+fn part1(input: &str, y_val: isize) -> R<usize> {
+    let points = parse_input(input)?;
     // These hash sets will be all the X coords in `y_val`
     let mut beacons = HashSet::new();
     let mut not_beacons = HashSet::new();
@@ -56,14 +61,14 @@ fn part1(input: &str, y_val: isize) -> R<usize> {
         }
         let radius = sensor.calculate_manhatten_distance(&beacon) as isize;
         // For each Y difference the radious will be reduced by 1
-        let radius_x_slice = radius - sensor.y.abs_diff(y_val) as isize;
-        if radius_x_slice < 0 {
+        let width_at_y_coordinate = radius - sensor.y.abs_diff(y_val) as isize;
+        if width_at_y_coordinate < 0 {
             // Not in the circle
             continue;
         }
 
-        let first = sensor.x - radius_x_slice;
-        let last = sensor.x + radius_x_slice;
+        let first = sensor.x - width_at_y_coordinate;
+        let last = sensor.x + width_at_y_coordinate;
         // Insert all confirmed not beacons known
         for x in first..=last {
             not_beacons.insert(x);
@@ -74,26 +79,7 @@ fn part1(input: &str, y_val: isize) -> R<usize> {
 }
 
 fn part2(input: &str, max_coord: isize) -> R<usize> {
-    let mut points = vec![];
-    for line in input.lines() {
-        let split = line.split(':').collect::<Vec<_>>();
-        let location = split[0].split(',').collect::<Vec<_>>();
-        let location_x = location[0].split('=').last().unwrap().parse()?;
-        let location_y = location[1].split('=').last().unwrap().parse()?;
-        let beacon = split[1].split(',').collect::<Vec<_>>();
-        let beacon_x = beacon[0].split('=').last().unwrap().parse()?;
-        let beacon_y = beacon[1].split('=').last().unwrap().parse()?;
-        points.push((
-            Point {
-                x: location_x,
-                y: location_y,
-            },
-            Point {
-                x: beacon_x,
-                y: beacon_y,
-            },
-        ));
-    }
+    let points = parse_input(input)?;
     // Go through every point and find one not covered
     let mut x = 0;
     let mut y = 0;
@@ -104,15 +90,15 @@ fn part2(input: &str, max_coord: isize) -> R<usize> {
             y += 1;
         }
         for (sensor, beacon) in points.iter() {
-            let radius = sensor.calculate_manhatten_distance(&beacon) as isize;
-            let radius_x_slice = radius - sensor.y.abs_diff(y) as isize;
-            if radius_x_slice < 0 {
+            let radius = sensor.calculate_manhatten_distance(beacon) as isize;
+            let width_at_y_coordinate = radius - sensor.y.abs_diff(y) as isize;
+            if width_at_y_coordinate < 0 {
                 // This sensor doesn't cover this line
                 continue;
             }
             // This sensor does cover this line
-            let first = sensor.x - radius_x_slice;
-            let last = sensor.x + radius_x_slice;
+            let first = sensor.x - width_at_y_coordinate;
+            let last = sensor.x + width_at_y_coordinate;
             if first <= x && x <= last {
                 // This point is covered go next
                 x = last + 1; // Move x forward to the next not covered index save calculations
