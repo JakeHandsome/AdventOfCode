@@ -1,6 +1,6 @@
 use common::*;
 use itertools::*;
-use petgraph::{algo::dijkstra, graph::Node, stable_graph::NodeIndex, Graph};
+use petgraph::{algo::dijkstra, stable_graph::NodeIndex, Graph};
 use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
@@ -57,16 +57,6 @@ fn get_one_and_slice(vec: &Vec<NodeIndex>, index: usize) -> (NodeIndex, Vec<Node
     let a = vec.remove(index);
     (a, vec)
 }
-#[derive(Debug, Clone)]
-struct Solution {
-    path: Vec<NodeIndex>,
-    sum: u64,
-}
-impl Solution {
-    fn new(path: Vec<NodeIndex>, sum: u64) -> Self {
-        Solution { path, sum }
-    }
-}
 
 #[derive(Debug, Clone)]
 struct Solver {
@@ -86,7 +76,6 @@ impl Solver {
         total_flow: isize,
         visited: Vec<NodeIndex>,
     ) -> HashMap<Vec<NodeIndex>, u64> {
-        //let mut solutions = vec![];
         let mut solutions = HashMap::new();
         let current_node = self.graph.node_weight(current).unwrap();
         let mut steps = steps;
@@ -94,7 +83,6 @@ impl Solver {
         let mut visited = visited;
         if steps <= 0 {
             solutions.insert(visited.clone(), total_flow as u64);
-            // solutions.push(Solution::new(visited.clone(), total_flow as u64));
         }
         if current_node.flow_rate > 0 && steps > 0 {
             visited.push(current);
@@ -102,13 +90,12 @@ impl Solver {
             total_flow += steps * current_node.flow_rate as isize;
         }
         solutions.insert(visited.clone(), total_flow as u64);
-        // solutions.push(Solution::new(visited.clone(), total_flow as u64));
         if steps > 0 && !remaining.is_empty() {
             for i in 0..remaining.len() {
                 let (next, next_v) = get_one_and_slice(&remaining, i);
                 let _next_node = self.graph.node_weight(next).unwrap();
                 let next_distance = self.distances[&current][&next];
-                let mut other = self.solve(
+                let other = self.solve(
                     next,
                     next_v,
                     steps - next_distance as isize,
@@ -116,11 +103,9 @@ impl Solver {
                     visited.clone(),
                 );
                 solutions.extend(other);
-                // solutions.append(&mut other);
             }
         } else {
             solutions.insert(visited, total_flow as u64);
-            //solutions.push(Solution::new(visited, total_flow as u64));
         }
         solutions
     }
@@ -191,7 +176,7 @@ fn part1(input: &str) -> R<u64> {
         .keys()
         .into_iter()
         .filter(|x| graph.node_weight(**x).unwrap().name != "AA")
-        .map(|x| *x)
+        .copied()
         .collect_vec();
 
     let graph2 = graph.clone();
@@ -203,7 +188,7 @@ fn part1(input: &str) -> R<u64> {
     // for node in &sol.path {
     //     print!("{:} ,", graph2.node_weight(*node).unwrap().name);
     // }
-    let max = solutions.iter().map(|(_, x)| *x).max().unwrap();
+    let max = solutions.values().copied().max().unwrap();
     let sol = solutions.iter().find(|(_, x)| **x == max).unwrap();
     for node in sol.0 {
         print!("{:} ,", graph2.node_weight(*node).unwrap().name);
@@ -260,10 +245,10 @@ fn part2(input: &str) -> R<u64> {
         .keys()
         .into_iter()
         .filter(|x| graph.node_weight(**x).unwrap().name != "AA")
-        .map(|x| *x)
+        .copied()
         .collect_vec();
 
-    let graph2 = graph.clone();
+    let _graph2 = graph.clone();
     let mut solver = Solver::new(graph, distances);
     let solutions = solver.solve(start, all_paths, 26, 0, vec![]);
 
@@ -303,16 +288,14 @@ fn part2(input: &str) -> R<u64> {
         s2.0.iter().for_each(|x| {
             combine.insert(*x);
         });
-        if combine.len() == s1.0.len() + s2.0.len() {
-            if max < sum {
-                max = sum;
-                println!(
-                    "{:} - {:}/{:}",
-                    sum,
-                    i.separate_with_commas(),
-                    len.separate_with_commas()
-                );
-            }
+        if combine.len() == s1.0.len() + s2.0.len() && max < sum {
+            max = sum;
+            println!(
+                "{:} - {:}/{:}",
+                sum,
+                i.separate_with_commas(),
+                len.separate_with_commas()
+            );
         }
     }
 
