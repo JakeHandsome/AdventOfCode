@@ -1,22 +1,17 @@
 use common::*;
 use itertools::*;
 use petgraph::{algo::dijkstra, stable_graph::NodeIndex, Graph};
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Debug,
-    time::SystemTime,
-};
-use thousands::Separable;
+use std::{collections::HashMap, fmt::Debug};
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
     {
-        let _timer = Timer::new("Part 2");
-        println!("Part2: {}", part2(&input).unwrap());
-    }
-    {
         let _timer = Timer::new("Part 1");
         println!("Part1: {}", part1(&input).unwrap());
+    }
+    {
+        let _timer = Timer::new("Part 2");
+        println!("Part2: {}", part2(&input).unwrap());
     }
 }
 
@@ -144,30 +139,6 @@ fn part1(input: &str) -> R<u64> {
         distances.insert(a, distance);
     }
 
-    // Print distances chart
-    #[cfg(not)]
-    {
-        print!("----- ");
-        for key in distances.keys().sorted() {
-            print!("{:3}, ", graph.node_weight(*key).unwrap().name);
-        }
-        println!();
-        for col in distances.keys().sorted() {
-            print!("{:4}: ", graph.node_weight(*col).unwrap().name);
-            for row in distances[col].keys().sorted() {
-                print!("{:3}, ", distances[col][row]);
-            }
-            println!()
-        }
-    }
-
-    let mut distance_vals = vec![];
-    for values in distances.values() {
-        for values2 in values.values() {
-            distance_vals.push(values2);
-        }
-    }
-
     let start = graph
         .node_indices()
         .find(|x| graph.node_weight(x.to_owned()).unwrap().name == "AA")
@@ -179,20 +150,10 @@ fn part1(input: &str) -> R<u64> {
         .copied()
         .collect_vec();
 
-    let graph2 = graph.clone();
     let mut solver = Solver::new(graph, distances);
     let solutions = solver.solve(start, all_paths, 30, 0, vec![]);
 
-    // let max = solutions.iter().map(|x| x.sum).max().unwrap();
-    // let sol = solutions.iter().find(|x| x.sum == max).unwrap();
-    // for node in &sol.path {
-    //     print!("{:} ,", graph2.node_weight(*node).unwrap().name);
-    // }
     let max = solutions.values().copied().max().unwrap();
-    let sol = solutions.iter().find(|(_, x)| **x == max).unwrap();
-    for node in sol.0 {
-        print!("{:} ,", graph2.node_weight(*node).unwrap().name);
-    }
 
     Ok(max)
 }
@@ -230,8 +191,6 @@ fn part2(input: &str) -> R<u64> {
         distances.insert(a, distance);
     }
 
-    let num_nodes = distances.keys().len() - 1;
-
     let start = graph
         .node_indices()
         .find(|x| graph.node_weight(x.to_owned()).unwrap().name == "AA")
@@ -248,44 +207,32 @@ fn part2(input: &str) -> R<u64> {
     let solutions = solver.solve(start, all_paths, 26, 0, vec![]);
 
     let mut max = 0;
-    let len = solutions.iter().permutations(2).enumerate().count();
-    let perms = solutions
+
+    let solutions_without_empty = solutions
         .into_iter()
         .filter(|(path, _)| !path.is_empty())
-        .permutations(2)
-        .enumerate();
-    let mut time = SystemTime::now();
-    for (i, perm) in perms {
-        let s1 = &perm[0];
-        let s2 = &perm[1];
+        .collect::<Vec<_>>();
+    for i in 0..(solutions_without_empty.len() - 1) {
+        let s1 = &solutions_without_empty[i];
+        #[allow(clippy::needless_range_loop)] // Range is faster than iterator, 1000ms vs 2300 ms
+        for j in i..(solutions_without_empty.len() - 1) {
+            #[cfg(debug)]
+            {
+                count += 1;
+            }
+            if i == j {
+                continue;
+            }
+            let s2 = &solutions_without_empty[j];
+            let sum = s1.1 + s2.1;
+            if sum < max {
+                continue;
+            }
 
-        let sum = s1.1 + s2.1;
-        if i % 1_000_000 == 0 {
-            println!(
-                "{:} = {:}/{:} - {:}ms",
-                max,
-                i.separate_with_commas(),
-                len.separate_with_commas(),
-                match time.elapsed() {
-                    Ok(x) => x.as_millis(),
-                    Err(_) => 0,
-                }
-            );
-            time = SystemTime::now();
-        }
-        if sum < max || s1.0.len() + s1.0.len() > num_nodes {
-            continue;
-        }
-
-        let has_dupes = s1.0.iter().any(|x| s2.0.contains(x));
-        if !has_dupes && max < sum {
-            max = sum;
-            println!(
-                "{:} - {:}/{:}",
-                sum,
-                i.separate_with_commas(),
-                len.separate_with_commas()
-            );
+            let has_dupes = s1.0.iter().any(|x| s2.0.contains(x));
+            if !has_dupes && max < sum {
+                max = sum;
+            }
         }
     }
 
