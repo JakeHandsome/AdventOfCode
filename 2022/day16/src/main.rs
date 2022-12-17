@@ -1,17 +1,22 @@
 use common::*;
 use itertools::*;
-use petgraph::{algo::dijkstra, stable_graph::NodeIndex, Graph};
-use std::{collections::HashMap, fmt::Debug};
+use petgraph::{algo::dijkstra, graph::Node, stable_graph::NodeIndex, Graph};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+    time::SystemTime,
+};
+use thousands::Separable;
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
     {
-        let _timer = Timer::new("Part 1");
-        println!("Part1: {}", part1(&input).unwrap());
-    }
-    {
         let _timer = Timer::new("Part 2");
         println!("Part2: {}", part2(&input).unwrap());
+    }
+    {
+        let _timer = Timer::new("Part 1");
+        println!("Part1: {}", part1(&input).unwrap());
     }
 }
 
@@ -52,19 +57,26 @@ fn get_one_and_slice(vec: &Vec<NodeIndex>, index: usize) -> (NodeIndex, Vec<Node
     let a = vec.remove(index);
     (a, vec)
 }
+#[derive(Debug, Clone)]
+struct Solution {
+    path: Vec<NodeIndex>,
+    sum: u64,
+}
+impl Solution {
+    fn new(path: Vec<NodeIndex>, sum: u64) -> Self {
+        Solution { path, sum }
+    }
+}
 
+#[derive(Debug, Clone)]
 struct Solver {
-    solutions: HashMap<Vec<NodeIndex>, u64>,
     graph: Graph<Valve, usize>,
     distances: HashMap<NodeIndex, HashMap<NodeIndex, usize>>,
 }
+
 impl Solver {
     fn new(graph: Graph<Valve, usize>, distances: HashMap<NodeIndex, HashMap<NodeIndex, usize>>) -> Self {
-        Solver {
-            solutions: HashMap::new(),
-            graph,
-            distances,
-        }
+        Solver { graph, distances }
     }
     fn solve(
         &mut self,
@@ -73,38 +85,44 @@ impl Solver {
         steps: isize,
         total_flow: isize,
         visited: Vec<NodeIndex>,
-    ) {
+    ) -> HashMap<Vec<NodeIndex>, u64> {
+        //let mut solutions = vec![];
+        let mut solutions = HashMap::new();
         let current_node = self.graph.node_weight(current).unwrap();
         let mut steps = steps;
         let mut total_flow = total_flow;
         let mut visited = visited;
         if steps <= 0 {
-            self.solutions.insert(visited.clone(), total_flow as u64);
+            solutions.insert(visited.clone(), total_flow as u64);
+            // solutions.push(Solution::new(visited.clone(), total_flow as u64));
         }
-        visited.push(current);
         if current_node.flow_rate > 0 && steps > 0 {
+            visited.push(current);
             steps -= 1;
             total_flow += steps * current_node.flow_rate as isize;
         }
-        if steps <= 0 {
-            self.solutions.insert(visited.clone(), total_flow as u64);
-        }
+        solutions.insert(visited.clone(), total_flow as u64);
+        // solutions.push(Solution::new(visited.clone(), total_flow as u64));
         if steps > 0 && !remaining.is_empty() {
             for i in 0..remaining.len() {
                 let (next, next_v) = get_one_and_slice(&remaining, i);
                 let _next_node = self.graph.node_weight(next).unwrap();
                 let next_distance = self.distances[&current][&next];
-                self.solve(
+                let mut other = self.solve(
                     next,
                     next_v,
                     steps - next_distance as isize,
                     total_flow,
                     visited.clone(),
-                )
+                );
+                solutions.extend(other);
+                // solutions.append(&mut other);
             }
         } else {
-            self.solutions.insert(visited, total_flow as u64);
+            solutions.insert(visited, total_flow as u64);
+            //solutions.push(Solution::new(visited, total_flow as u64));
         }
+        solutions
     }
 }
 
@@ -125,20 +143,6 @@ fn part1(input: &str) -> R<u64> {
     }
 
     let graph = Graph::create_graph(valves, valve_connections);
-
-    #[cfg(not)]
-    {
-        #[cfg(test)]
-        let file_name = "day16_sample.dot";
-        #[cfg(not(test))]
-        let file_name = "day16_real.dot";
-
-        let mut file = std::fs::File::create(file_name)?;
-        file.write_fmt(format_args!(
-            "{:?}",
-            Dot::with_config(&graph, &[Config::_Incomplete(())])
-        ))?;
-    }
 
     let mut distances = HashMap::new();
     for a in graph.node_indices().filter(|x| {
@@ -192,19 +196,127 @@ fn part1(input: &str) -> R<u64> {
 
     let graph2 = graph.clone();
     let mut solver = Solver::new(graph, distances);
-    solver.solve(start, all_paths, 30, 0, vec![]);
+    let solutions = solver.solve(start, all_paths, 30, 0, vec![]);
 
-    let max = *solver.solutions.values().max().unwrap();
-    let (path, _) = solver.solutions.iter().find(|(_, v)| **v == max).unwrap();
-    for node in path {
+    // let max = solutions.iter().map(|x| x.sum).max().unwrap();
+    // let sol = solutions.iter().find(|x| x.sum == max).unwrap();
+    // for node in &sol.path {
+    //     print!("{:} ,", graph2.node_weight(*node).unwrap().name);
+    // }
+    let max = solutions.iter().map(|(_, x)| *x).max().unwrap();
+    let sol = solutions.iter().find(|(_, x)| **x == max).unwrap();
+    for node in sol.0 {
         print!("{:} ,", graph2.node_weight(*node).unwrap().name);
     }
 
     Ok(max)
 }
 
-fn part2(_input: &str) -> R<u64> {
-    Err(Box::new(AdventOfCodeError::new("Not implemented")))
+fn part2(input: &str) -> R<u64> {
+    let mut valves = vec![];
+    let mut valve_connections = HashMap::new();
+    for line in input.lines() {
+        let name = line.split(' ').nth(1).unwrap().to_string();
+        let flow_rate: u64 = line.split(';').next().unwrap().split('=').last().unwrap().parse()?;
+        let edges = line
+            .split(' ')
+            .skip(9)
+            .map(|x| x[0..2].to_string())
+            .collect::<Vec<String>>();
+
+        valve_connections.insert(name.clone(), edges);
+        valves.push(Valve { name, flow_rate });
+    }
+
+    let graph = Graph::create_graph(valves, valve_connections);
+
+    let mut distances = HashMap::new();
+    for a in graph.node_indices().filter(|x| {
+        let w = graph.node_weight(*x).unwrap();
+        w.flow_rate > 0 || w.name == "AA"
+    }) {
+        let distance = dijkstra(&graph, a, None, |x| *x.weight())
+            .into_iter()
+            .filter(|(x, _size)| {
+                let w = graph.node_weight(*x).unwrap();
+                w.flow_rate > 0 || w.name == "AA"
+            })
+            .collect::<HashMap<_, _>>();
+        distances.insert(a, distance);
+    }
+
+    let mut distance_vals = vec![];
+    for values in distances.values() {
+        for values2 in values.values() {
+            distance_vals.push(values2);
+        }
+    }
+
+    let start = graph
+        .node_indices()
+        .find(|x| graph.node_weight(x.to_owned()).unwrap().name == "AA")
+        .unwrap();
+    let all_paths = distances
+        .keys()
+        .into_iter()
+        .filter(|x| graph.node_weight(**x).unwrap().name != "AA")
+        .map(|x| *x)
+        .collect_vec();
+
+    let graph2 = graph.clone();
+    let mut solver = Solver::new(graph, distances);
+    let solutions = solver.solve(start, all_paths, 26, 0, vec![]);
+
+    let mut max = 0;
+    let len = solutions.iter().permutations(2).enumerate().count();
+    let perms = solutions
+        .into_iter()
+        .filter(|(path, _)| !path.is_empty())
+        .permutations(2)
+        .enumerate();
+    let mut time = SystemTime::now();
+    for (i, perm) in perms {
+        let s1 = &perm[0];
+        let s2 = &perm[1];
+
+        let sum = s1.1 + s2.1;
+        if i % 1_000_000 == 0 {
+            println!(
+                "{:} = {:}/{:} - {:}ms",
+                max,
+                i.separate_with_commas(),
+                len.separate_with_commas(),
+                match time.elapsed() {
+                    Ok(x) => x.as_millis(),
+                    Err(_) => 0,
+                }
+            );
+            time = SystemTime::now();
+        }
+        if sum < max {
+            continue;
+        }
+        let mut combine = HashSet::new();
+        s1.0.iter().for_each(|x| {
+            combine.insert(*x);
+        });
+        s2.0.iter().for_each(|x| {
+            combine.insert(*x);
+        });
+        if combine.len() == s1.0.len() + s2.0.len() {
+            if max < sum {
+                max = sum;
+                println!(
+                    "{:} - {:}/{:}",
+                    sum,
+                    i.separate_with_commas(),
+                    len.separate_with_commas()
+                );
+            }
+        }
+    }
+
+    Ok(max)
 }
 
 #[cfg(test)]
