@@ -230,12 +230,7 @@ fn part2(input: &str) -> R<u64> {
         distances.insert(a, distance);
     }
 
-    let mut distance_vals = vec![];
-    for values in distances.values() {
-        for values2 in values.values() {
-            distance_vals.push(values2);
-        }
-    }
+    let num_nodes = distances.keys().len() - 1;
 
     let start = graph
         .node_indices()
@@ -278,17 +273,12 @@ fn part2(input: &str) -> R<u64> {
             );
             time = SystemTime::now();
         }
-        if sum < max {
+        if sum < max || s1.0.len() + s1.0.len() > num_nodes {
             continue;
         }
-        let mut combine = HashSet::new();
-        s1.0.iter().for_each(|x| {
-            combine.insert(*x);
-        });
-        s2.0.iter().for_each(|x| {
-            combine.insert(*x);
-        });
-        if combine.len() == s1.0.len() + s2.0.len() && max < sum {
+
+        let has_dupes = s1.0.iter().any(|x| s2.0.contains(x));
+        if !has_dupes && max < sum {
             max = sum;
             println!(
                 "{:} - {:}/{:}",
