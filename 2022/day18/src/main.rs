@@ -1,7 +1,4 @@
-use std::{
-    thread::{self, Builder},
-    vec,
-};
+use std::{thread::Builder, vec};
 
 use common::*;
 
@@ -159,15 +156,15 @@ fn flood_fill(cube: &mut Cube, x: isize, y: isize, z: isize) {
         (x, y + 1, z),
         (x, y, z + 1),
     ] {
-        match get_from_cube(cube, x2, y2, z2) {
-            Some(block) => match block {
+        if let Some(block) = get_from_cube(cube, x2, y2, z2) {
+            match block {
                 Air => flood_fill(cube, x2, y2, z2),
                 Water | Rock => (),
-            },
-            None => (),
+            }
         }
     }
 }
+#[allow(clippy::needless_range_loop)]
 fn fill_with_water(cube: &mut Cube) {
     // Fill all external nodes with water
     flood_fill(cube, 0, 0, 0);
