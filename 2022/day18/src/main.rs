@@ -37,21 +37,6 @@ fn get_from_cube(cube: &Cube, x: isize, y: isize, z: isize) -> Option<BlockType>
     }
 }
 
-fn get_from_cube_mut(cube: &mut Cube, x: isize, y: isize, z: isize) -> Option<&mut BlockType> {
-    if x.is_negative() || y.is_negative() || z.is_negative() {
-        None
-    } else {
-        let x = x as usize;
-        let y = y as usize;
-        let z = z as usize;
-        if x >= cube.len() || y >= cube[0].len() || z >= cube[0][0].len() {
-            None
-        } else {
-            Some(cube[x][y].get_mut(z).unwrap())
-        }
-    }
-}
-
 fn has_neighbor(cube: &Cube, x: isize, y: isize, z: isize) -> BlockType {
     if x.is_negative() || y.is_negative() || z.is_negative() {
         Air
@@ -144,10 +129,7 @@ fn part2(input: &str) -> R<usize> {
     Ok(answer)
 }
 fn flood_fill(cube: &mut Cube, x: isize, y: isize, z: isize) {
-    let current = get_from_cube_mut(cube, x, y, z).unwrap();
-    assert_eq!(*current, Air);
-    // Fill this cube
-    *current = Water;
+    cube[x as usize][y as usize][z as usize] = Water;
     for (x2, y2, z2) in [
         (x - 1, y, z),
         (x, y - 1, z),
