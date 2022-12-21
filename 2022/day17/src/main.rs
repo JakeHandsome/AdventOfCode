@@ -100,7 +100,7 @@ impl Shapes {
                 let mut result = true;
                 // Check each block along the left side of the height of this bloc
                 for i in 0..*height {
-                    result = result && board.read_position(x, y + i as isize);
+                    result = result && board.read_position(x - 1, y + i as isize);
                 }
                 result
             }
@@ -112,18 +112,53 @@ impl Shapes {
     }
     /// Attempt to move a piece right if possible
     fn move_right(&self, board: &mut Board) {
-        match self {
-            Shapes::L => todo!(),
-            Shapes::Cross => todo!(),
-            Shapes::Rect(x, y) => todo!(),
+        let (x, y) = board.current_piece_location;
+
+        let x: isize = x.try_into().unwrap();
+        let y: isize = y.try_into().unwrap();
+        let can_move = match self {
+            Shapes::L => {
+                board.read_position(x + 3, y) && board.read_position(x + 3, y + 1) && board.read_position(x + 3, y + 2)
+            }
+            Shapes::Cross => {
+                board.read_position(x + 2, y) && board.read_position(x + 3, y + 1) && board.read_position(x + 2, y + 3)
+            }
+            Shapes::Rect(width, height) => {
+                let mut result = true;
+                // Check each block along the left side of the height of this bloc
+                for i in 0..*height {
+                    let i = i as isize;
+                    result = result && board.read_position(x + *width as isize, y + i as isize);
+                }
+                result
+            }
+        };
+        if can_move {
+            board.current_piece_location = (board.current_piece_location.0 + 1, board.current_piece_location.1);
         }
     }
     /// Attempt to move down, if it cannot move down, return false
     fn move_down(&self, board: &mut Board) -> bool {
+        let (x, y) = board.current_piece_location;
+
+        let x: isize = x.try_into().unwrap();
+        let y: isize = y.try_into().unwrap();
         match self {
-            Shapes::L => todo!(),
-            Shapes::Cross => todo!(),
-            Shapes::Rect(x, y) => todo!(),
+            Shapes::L => {
+                board.read_position(x, y - 1) && board.read_position(x + 1, y - 1) && board.read_position(x + 2, y - 1)
+            }
+            Shapes::Cross => {
+                board.read_position(x, y) && board.read_position(x + 1, y - 1) && board.read_position(x + 2, y)
+            }
+            Shapes::Rect(width, _height) => {
+                let mut result = true;
+                // Check each block along the left side of the height of this bloc
+                for i in 0..*width {
+                    let i = i as isize;
+                    result = result && board.read_position(x + i, y - 1 as isize);
+                }
+                result
+            }
         }
     }
     /// Spawns a new piece in the spawn position
