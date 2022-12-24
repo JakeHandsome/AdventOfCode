@@ -1,5 +1,3 @@
-use std::fmt::Write;
-
 const WIDTH: usize = 7;
 const MAX_PIECE_HEIGHT: usize = 4;
 const SPAWN_X_OFFSET: usize = 2;
@@ -42,11 +40,6 @@ impl Board {
     #[inline]
     pub fn x_y_to_index(x: usize, y: usize) -> usize {
         y * WIDTH + x
-    }
-
-    #[inline]
-    fn index_to_x_y(x: usize) -> (usize, usize) {
-        (x / WIDTH, x % WIDTH)
     }
 
     pub fn new() -> Self {

@@ -1,5 +1,4 @@
-use core::num;
-use std::collections::HashMap;
+use std::collections::{hash_map::Entry::Vacant, HashMap};
 
 use board::Board;
 use common::*;
@@ -49,7 +48,7 @@ fn part1(input: &str) -> R<usize> {
     let jet_patterns = input
         .chars()
         .filter(|c| matches!(c, '<' | '>'))
-        .map(|c| HorizontalMovement::new(c))
+        .map(HorizontalMovement::new)
         .collect::<Vec<_>>();
     let mut board = Board::new();
     let mut jet_index = 0;
@@ -97,7 +96,7 @@ fn part2(input: &str) -> R<usize> {
     let jet_patterns = input
         .chars()
         .filter(|c| matches!(c, '<' | '>'))
-        .map(|c| HorizontalMovement::new(c))
+        .map(HorizontalMovement::new)
         .collect::<Vec<_>>();
     let mut board = Board::new();
     let mut jet_index = 0;
@@ -128,26 +127,24 @@ fn part2(input: &str) -> R<usize> {
                 board.spawn_new_rock(last_rock_height);
                 let key = (rock_index, jet_index);
                 if board.height > 2 && !diff_found {
-                    if !differences.contains_key(&key) {
-                        differences.insert(key, vec![(board.height, rocks_simulated)]);
-                    } else {
-                        differences
-                            .get_mut(&key)
-                            .map(|val| val.push((board.height, rocks_simulated)));
+                    // Use a hashmap to save the rock and jet index with the height and number of rocks
+                    if let Vacant(e) = differences.entry(key) {
+                        e.insert(vec![(board.height, rocks_simulated)]);
+                    } else if let Some(val) = differences.get_mut(&key) {
+                        val.push((board.height, rocks_simulated))
                     }
                     let heights = &differences[&key];
                     let x = heights.len() - 1;
-                    if heights.len() > 2 {
-                        if heights[x].0 - heights[x - 1].0 == heights[x - 1].0 - heights[x - 2].0 {
-                            diff_found = true;
-                            let rocks_left = 1_000_000_000_000 - rocks_simulated;
-                            let repeat_dist = heights[x].0 - heights[x - 1].0;
-                            let num_rocks = heights[x].1 - heights[x - 1].1;
-                            let (can_simulate, num_left) = (rocks_left / num_rocks, rocks_left % num_rocks);
-                            height_offset = can_simulate * repeat_dist;
-                            rocks_simulated = 1_000_000_000_000 - num_left;
-                            println!("{rocks_simulated},{repeat_dist},{num_left}");
-                        }
+                    // Try and find a repeating pattern
+                    if heights.len() > 2 && heights[x].0 - heights[x - 1].0 == heights[x - 1].0 - heights[x - 2].0 {
+                        // If the pattern was found, calculate the height_offset and increase the rocks simulated by a lot
+                        diff_found = true;
+                        let rocks_left = 1_000_000_000_000 - rocks_simulated;
+                        let repeat_dist = heights[x].0 - heights[x - 1].0;
+                        let num_rocks = heights[x].1 - heights[x - 1].1;
+                        let (can_simulate, num_left) = (rocks_left / num_rocks, rocks_left % num_rocks);
+                        height_offset = can_simulate * repeat_dist;
+                        rocks_simulated = 1_000_000_000_000 - num_left;
                     }
                 }
                 break;

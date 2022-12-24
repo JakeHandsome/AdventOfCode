@@ -53,7 +53,7 @@ impl Shapes {
                 // Check each block along the left side of the height of this block
                 for i in 0..*height {
                     let i: isize = i.try_into().unwrap();
-                    result = result && !board.read_position(x - 1, (y + i).try_into().unwrap());
+                    result = result && !board.read_position(x - 1, y + i);
                 }
                 result
             }
@@ -113,7 +113,7 @@ impl Shapes {
                 // Check each block along the bottom of this block
                 for i in 0..*width {
                     let i: isize = i.try_into().unwrap();
-                    result = result || board.read_position(x + i, (y - 1).try_into().unwrap());
+                    result = result || board.read_position(x + i, y - 1);
                 }
                 result
             }
@@ -129,11 +129,11 @@ impl Shapes {
             Shapes::Cross => vec![(x + 1, y), (x, y + 1), (x + 1, y + 1), (x + 2, y + 1), (x + 1, y + 2)],
             Shapes::Rect(width, height) => {
                 let mut res = vec![];
-                let x_max = x as usize + *width;
-                let y_max = y as usize + *height;
+                let x_max = x + *width;
+                let y_max = y + *height;
                 for x in x..x_max {
                     for y in y..y_max {
-                        res.push((x.try_into().unwrap(), y.try_into().unwrap()))
+                        res.push((x, y))
                     }
                 }
                 res
@@ -143,10 +143,6 @@ impl Shapes {
             board.write_position((*x).try_into().unwrap(), (*y).try_into().unwrap(), true)
         }
         // return the max height of this block
-        positions
-            .into_iter()
-            .map(|(_, y)| usize::try_from(y).unwrap())
-            .max()
-            .unwrap()
+        positions.into_iter().map(|(_, y)| y).max().unwrap()
     }
 }
