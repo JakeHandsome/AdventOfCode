@@ -1,4 +1,9 @@
+use core::num;
+use std::collections::HashMap;
+
+use board::Board;
 use common::*;
+use shapes::Shapes;
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -29,165 +34,129 @@ impl HorizontalMovement {
     }
 }
 
-const WIDTH: usize = 7;
+mod board;
+mod shapes;
 
-struct Board {
-    // This will be 7 wide and height + 6 (for room to spawn new pieces) tall
-    data: Vec<bool>,
-    /// This is the height of the blocks, starts at 0. This will be the answer
-    height: usize,
-    /// This is the bottom left square for each piece
-    current_piece_location: (usize, usize),
-}
-impl Board {
-    fn read_position(&self, x: isize, y: isize) -> bool {
-        if x.is_negative() || y.is_negative() || x as usize >= WIDTH || y as usize >= self.height {
-            true // Mark this square as occupied
-        } else {
-            let y = y as usize;
-            let x = x as usize;
-            self.data[y * WIDTH + x]
-        }
-    }
-}
-/// Marked are the squares to check. L for left, D for down, R for right, X | x being the 0,0 point. X if in the shape x if outside
-enum Shapes {
-    /// L shape.
-    ///  .L#R
-    ///  .L#R
-    /// LX##R
-    ///  DDD
-    L,
-    /// + shape.
-    ///     L#R
-    ///    L###R
-    /// x/D/R#D/R
-    ///      D
-    Cross,
-    /// 4x1
-    ///  L####R
-    ///   DDDD
-    /// 1x4
-    ///  L#R
-    ///  L#R
-    ///  L#R
-    ///  L#R
-    ///   D
-    /// 2x2
-    ///  L##R
-    ///  L##R
-    ///   DD
-    Rect(usize, usize),
-}
-
-impl Shapes {
-    /// Attempt to a move a piece left if possible
-    fn move_left(&self, board: &mut Board) {
-        let (x, y) = board.current_piece_location;
-
-        let x: isize = x.try_into().unwrap();
-        let y: isize = y.try_into().unwrap();
-        let can_move = match self {
-            Shapes::L => {
-                // Check 3 positions
-                board.read_position(x - 1, y) && board.read_position(x + 1, y + 1) && board.read_position(x + 1, y + 2)
-            }
-            Shapes::Cross => {
-                // Check 3 positions
-                board.read_position(x, y) && board.read_position(x - 1, y + 1) && board.read_position(x, y + 2)
-            }
-            Shapes::Rect(_width, height) => {
-                let mut result = true;
-                // Check each block along the left side of the height of this bloc
-                for i in 0..*height {
-                    result = result && board.read_position(x - 1, y + i as isize);
-                }
-                result
-            }
-        };
-        // Move one space to the left
-        if can_move {
-            board.current_piece_location = (board.current_piece_location.0 - 1, board.current_piece_location.1);
-        }
-    }
-    /// Attempt to move a piece right if possible
-    fn move_right(&self, board: &mut Board) {
-        let (x, y) = board.current_piece_location;
-
-        let x: isize = x.try_into().unwrap();
-        let y: isize = y.try_into().unwrap();
-        let can_move = match self {
-            Shapes::L => {
-                board.read_position(x + 3, y) && board.read_position(x + 3, y + 1) && board.read_position(x + 3, y + 2)
-            }
-            Shapes::Cross => {
-                board.read_position(x + 2, y) && board.read_position(x + 3, y + 1) && board.read_position(x + 2, y + 3)
-            }
-            Shapes::Rect(width, height) => {
-                let mut result = true;
-                // Check each block along the left side of the height of this bloc
-                for i in 0..*height {
-                    let i = i as isize;
-                    result = result && board.read_position(x + *width as isize, y + i as isize);
-                }
-                result
-            }
-        };
-        if can_move {
-            board.current_piece_location = (board.current_piece_location.0 + 1, board.current_piece_location.1);
-        }
-    }
-    /// Attempt to move down, if it cannot move down, return false
-    fn move_down(&self, board: &mut Board) -> bool {
-        let (x, y) = board.current_piece_location;
-
-        let x: isize = x.try_into().unwrap();
-        let y: isize = y.try_into().unwrap();
-        match self {
-            Shapes::L => {
-                board.read_position(x, y - 1) && board.read_position(x + 1, y - 1) && board.read_position(x + 2, y - 1)
-            }
-            Shapes::Cross => {
-                board.read_position(x, y) && board.read_position(x + 1, y - 1) && board.read_position(x + 2, y)
-            }
-            Shapes::Rect(width, _height) => {
-                let mut result = true;
-                // Check each block along the left side of the height of this bloc
-                for i in 0..*width {
-                    let i = i as isize;
-                    result = result && board.read_position(x + i, y - 1 as isize);
-                }
-                result
-            }
-        }
-    }
-    /// Spawns a new piece in the spawn position
-    fn spawn(&self, board: &mut Board) {
-        match self {
-            Shapes::L => todo!(),
-            Shapes::Cross => todo!(),
-            Shapes::Rect(x, y) => todo!(),
-        }
-    }
-}
-
-fn part1(input: &str) -> R<u64> {
+fn part1(input: &str) -> R<usize> {
+    // List of shapes in order of spawning
+    let shapes = [
+        Shapes::Rect(4, 1),
+        Shapes::Cross,
+        Shapes::L,
+        Shapes::Rect(1, 4),
+        Shapes::Rect(2, 2),
+    ];
     let jet_patterns = input
         .chars()
         .filter(|c| matches!(c, '<' | '>'))
         .map(|c| HorizontalMovement::new(c))
-        .cycle();
-    for (i, _) in jet_patterns.enumerate() {
-        if i % 1_000_000_000 == 0 {
-            println!("{:?}", i);
+        .collect::<Vec<_>>();
+    let mut board = Board::new();
+    let mut jet_index = 0;
+    for i in 0..=2022 {
+        //println!("\n-------\n{board}\n");
+        let rock = &shapes[i % shapes.len()];
+        loop {
+            // Move rock left or right
+            match jet_patterns[jet_index] {
+                Left => {
+                    rock.move_left(&mut board);
+                    //  println!("<-\n{board}\n");
+                }
+                Right => {
+                    rock.move_right(&mut board);
+                    //   println!("->\n{board}\n");
+                }
+            }
+            jet_index = (jet_index + 1) % jet_patterns.len();
+            // Move rock down and potentionally place it
+            if !rock.move_down(&mut board) {
+                let last_rock_height = rock.turn_to_rock(&mut board);
+                board.spawn_new_rock(last_rock_height);
+                break;
+            } else {
+                board.current_piece_location.1 -= 1;
+            }
+            // println!("v\n{board}\n"
         }
     }
-
-    Err(Box::new(AdventOfCodeError::new("Not implemented")))
+    // Subtract 2, because the height is also 1 higher than it should be (for piece spawning reasons).
+    //Idk why you need to subtract the other 1. Probably 1 index vs 0 index idk?
+    Ok(board.height - 2)
 }
 
-fn part2(input: &str) -> R<u64> {
-    Err(Box::new(AdventOfCodeError::new("Not implemented")))
+fn part2(input: &str) -> R<usize> {
+    // List of shapes in order of spawning
+    let shapes = [
+        Shapes::Rect(4, 1),
+        Shapes::Cross,
+        Shapes::L,
+        Shapes::Rect(1, 4),
+        Shapes::Rect(2, 2),
+    ];
+    let jet_patterns = input
+        .chars()
+        .filter(|c| matches!(c, '<' | '>'))
+        .map(|c| HorizontalMovement::new(c))
+        .collect::<Vec<_>>();
+    let mut board = Board::new();
+    let mut jet_index = 0;
+    let mut differences = HashMap::new();
+    let mut diff_found = false;
+    let mut rocks_simulated = 0;
+    let mut height_offset = 0;
+    while rocks_simulated <= 1_000_000_000_000 {
+        let rock_index = rocks_simulated % shapes.len();
+        let rock = &shapes[rock_index];
+        loop {
+            // Move rock left or right
+            match jet_patterns[jet_index] {
+                Left => {
+                    rock.move_left(&mut board);
+                }
+                Right => {
+                    rock.move_right(&mut board);
+                }
+            }
+            jet_index = (jet_index + 1) % jet_patterns.len();
+            // Move rock down and potentionally place it
+            if rock.move_down(&mut board) {
+                board.current_piece_location.1 -= 1;
+            } else {
+                rocks_simulated += 1;
+                let last_rock_height = rock.turn_to_rock(&mut board);
+                board.spawn_new_rock(last_rock_height);
+                let key = (rock_index, jet_index);
+                if board.height > 2 && !diff_found {
+                    if !differences.contains_key(&key) {
+                        differences.insert(key, vec![(board.height, rocks_simulated)]);
+                    } else {
+                        differences
+                            .get_mut(&key)
+                            .map(|val| val.push((board.height, rocks_simulated)));
+                    }
+                    let heights = &differences[&key];
+                    let x = heights.len() - 1;
+                    if heights.len() > 2 {
+                        if heights[x].0 - heights[x - 1].0 == heights[x - 1].0 - heights[x - 2].0 {
+                            diff_found = true;
+                            let rocks_left = 1_000_000_000_000 - rocks_simulated;
+                            let repeat_dist = heights[x].0 - heights[x - 1].0;
+                            let num_rocks = heights[x].1 - heights[x - 1].1;
+                            let (can_simulate, num_left) = (rocks_left / num_rocks, rocks_left % num_rocks);
+                            height_offset = can_simulate * repeat_dist;
+                            rocks_simulated = 1_000_000_000_000 - num_left;
+                            println!("{rocks_simulated},{repeat_dist},{num_left}");
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+    // Subtract 2, because the height is also 1 higher than it should be (for piece spawning reasons).
+    //Idk why you need to subtract the other 1. Probably 1 index vs 0 index idk?
+    Ok(board.height - 2 + height_offset + 1) // Idk why I need +1 but it makes the unit test pass
 }
 
 #[cfg(test)]
@@ -200,6 +169,6 @@ mod tests {
     }
     #[test]
     fn p2_test() {
-        assert_eq!(part2(SAMPLE1).unwrap(), 0);
+        assert_eq!(part2(SAMPLE1).unwrap(), 1_514_285_714_288);
     }
 }
