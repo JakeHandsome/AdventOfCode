@@ -38,8 +38,17 @@ fn snafu_to_decimal(input: &str) -> isize {
     result
 }
 
+const SNAFU_CHARS: [char; 5] = ['=', '-', '0', '1', '2'];
+
 fn decimal_to_snafu(x: isize) -> String {
-    todo!()
+    if x > 0 {
+        let (remainder, current_char) = ((x + 2) / 5, (x + 2) % 5);
+        // Calculate the rest of the nubmers and append the remainder encoded as snafu
+        format!("{}{}", decimal_to_snafu(remainder), SNAFU_CHARS[current_char as usize])
+    } else {
+        // Return an empty string, no more characters left
+        return "".to_string();
+    }
 }
 
 #[cfg(test)]
