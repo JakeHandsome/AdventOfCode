@@ -21,7 +21,7 @@ impl Elf {
         }
     }
 
-    pub fn propose_movement(&self, elf_locations: &Vec<Point>, index: usize) -> Option<Point> {
+    pub fn propose_movement(&self, elf_locations: &[Point], index: usize) -> Option<Point> {
         use crate::Direction::*;
         const DIRECTIONS: [Direction; 4] = [North, South, West, East];
 

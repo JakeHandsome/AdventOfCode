@@ -49,14 +49,9 @@ fn part1(input: &str) -> R<usize> {
             .map(|elf| {
                 let proposal = elf.propose_movement(&elf_positions, round);
                 elf.proposal = proposal;
-                if let Some(move_point) = proposal {
-                    Some(move_point)
-                } else {
-                    None
-                }
+                proposal
             })
-            .filter(|x| x.is_some())
-            .map(|x| x.unwrap())
+            .flatten()
             .collect::<Vec<_>>();
         // Second half of round
         for elf in elves.iter_mut() {
@@ -95,14 +90,9 @@ fn part2(input: &str) -> R<usize> {
             .map(|elf| {
                 let proposal = elf.propose_movement(&elf_positions, round);
                 elf.proposal = proposal;
-                if let Some(move_point) = proposal {
-                    Some(move_point)
-                } else {
-                    None
-                }
+                proposal
             })
-            .filter(|x| x.is_some())
-            .map(|x| x.unwrap())
+            .flatten()
             .collect::<Vec<_>>();
         // If no new locations where proposed, nothing needs to move
         if new_locations.is_empty() {
