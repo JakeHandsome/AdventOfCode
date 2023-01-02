@@ -1,4 +1,4 @@
-use std::{clone, collections::HashMap};
+use std::{collections::HashMap};
 
 use common::*;
 use rayon::prelude::*;
@@ -67,7 +67,7 @@ impl SolveYell2 for Yells2 {
             MonkeyYellPt2::Equation { lhs, rhs, operation } => {
                 let lhs = self.get_yell_value(lhs);
                 let rhs = self.get_yell_value(rhs);
-                if !lhs.contains("x") && !rhs.contains("x") {
+                if !lhs.contains('x') && !rhs.contains('x') {
                     // We can reduce this
                     let lhs = lhs.parse::<isize>().unwrap();
                     let rhs = rhs.parse::<isize>().unwrap();
@@ -79,12 +79,10 @@ impl SolveYell2 for Yells2 {
                         _ => unreachable!(),
                     };
                     val.to_string()
+                } else if *operation == '+' || *operation == '-' {
+                    format!("({lhs}{operation}{rhs})")
                 } else {
-                    if *operation == '+' || *operation == '-' {
-                        format!("({lhs}{operation}{rhs})")
-                    } else {
-                        format!("{lhs}{operation}{rhs}")
-                    }
+                    format!("{lhs}{operation}{rhs}")
                 }
             }
             MonkeyYellPt2::Number(x) => x.to_owned(),
@@ -110,7 +108,7 @@ fn part1(input: &str) -> R<isize> {
     for line in input.lines() {
         let split = line.split(':').collect::<Vec<_>>();
         let name: MonkeyName = split[0].into();
-        let split2 = split[1].trim().split(" ").collect::<Vec<_>>();
+        let split2 = split[1].trim().split(' ').collect::<Vec<_>>();
         if split2.len() == 1 {
             yells.insert(name, MonkeyYell::Number(split2[0].parse()?));
         } else if split2.len() == 3 {
@@ -132,7 +130,7 @@ fn part2(input: &str) -> R<String> {
     for line in input.lines() {
         let split = line.split(':').collect::<Vec<_>>();
         let name: MonkeyName = split[0].into();
-        let split2 = split[1].trim().split(" ").collect::<Vec<_>>();
+        let split2 = split[1].trim().split(' ').collect::<Vec<_>>();
         if split2.len() == 1 {
             yells.insert(name, MonkeyYellPt2::Number(split2[0].parse()?));
         } else if split2.len() == 3 {

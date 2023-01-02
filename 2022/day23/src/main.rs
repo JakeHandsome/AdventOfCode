@@ -1,6 +1,5 @@
 use common::*;
 use elf::Elf;
-use point::Point;
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -112,6 +111,7 @@ fn part2(input: &str) -> R<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use point::Point;
     const SAMPLE1: &str = r#"....#..
 ..###.#
 #...#.#

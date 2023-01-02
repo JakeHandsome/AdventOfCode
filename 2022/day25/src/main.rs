@@ -13,24 +13,24 @@ fn main() {
 }
 
 fn part1(input: &str) -> R<String> {
-    Ok(decimal_to_snafu(input.lines().map(|s| snafu_to_decimal(s)).sum()))
+    Ok(decimal_to_snafu(input.lines().map(snafu_to_decimal).sum()))
 }
 
-fn part2(input: &str) -> R<usize> {
+fn part2(_input: &str) -> R<usize> {
     Err(Box::new(AdventOfCodeError::new("Not implemented")))
 }
 
 fn snafu_to_decimal(input: &str) -> isize {
-    let mut iter = input.chars();
+    let iter = input.chars();
     let mut position = 5isize.pow(input.len() as u32 - 1);
     let mut result = 0;
-    while let Some(c) = iter.next() {
+    for c in iter {
         match c {
             '0' | '1' | '2' => {
                 result += position * c.to_digit(10).unwrap() as isize;
             }
             '=' => result += position * -2,
-            '-' => result += position * -1,
+            '-' => result += -position,
             _ => unreachable!(),
         }
         position /= 5;
@@ -47,7 +47,7 @@ fn decimal_to_snafu(x: isize) -> String {
         format!("{}{}", decimal_to_snafu(remainder), SNAFU_CHARS[current_char as usize])
     } else {
         // Return an empty string, no more characters left
-        return "".to_string();
+        "".to_string()
     }
 }
 
