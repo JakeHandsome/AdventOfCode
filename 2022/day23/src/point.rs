@@ -1,6 +1,6 @@
 use crate::Direction;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Point {
     pub x: isize,
     pub y: isize,

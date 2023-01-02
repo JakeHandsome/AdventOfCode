@@ -1,4 +1,4 @@
-use crate::point::Point;
+use crate::{point::Point, Direction};
 
 pub struct Elf {
     // Where this elf is
@@ -21,44 +21,44 @@ impl Elf {
         }
     }
 
-    pub fn propose_movement(&self, elf_locations: Vec<Point>, index: usize) -> Option<Point> {
+    pub fn propose_movement(&self, elf_locations: &Vec<Point>, index: usize) -> Option<Point> {
         use crate::Direction::*;
-        let directions = [North, South, West, East];
-
-        // Check the directions in order, based on the index (round number)
-        // Ex: Round1 N S W E
-        //     Round2 S W E N
-        let direction1 = directions[index % 4];
-        let direction2 = directions[(index + 1) % 4];
-        let direction3 = directions[(index + 2) % 4];
-        let direction4 = directions[(index + 3) % 4];
+        const DIRECTIONS: [Direction; 4] = [North, South, West, East];
 
         // Check if is isolated
         if Point::get_adjacent_offsets()
             .iter()
-            .all(|p| !elf_locations.contains(&(*p + self.location)))
+            .all(|p| elf_locations.binary_search(&(*p + self.location)).is_err())
         {
             return None;
         }
+
+        // Check the directions in order, based on the index (round number)
+        // Ex: Round1 N S W E
+        //     Round2 S W E N
+        let direction1 = DIRECTIONS[index % 4];
+        let direction2 = DIRECTIONS[(index + 1) % 4];
+        let direction3 = DIRECTIONS[(index + 2) % 4];
+        let direction4 = DIRECTIONS[(index + 3) % 4];
         let mut direction = None;
         if Point::get_offset_for_direction(direction1)
             .iter()
-            .all(|p| !elf_locations.contains(&(*p + self.location)))
+            .all(|p| elf_locations.binary_search(&(*p + self.location)).is_err())
         {
             direction = Some(direction1);
         } else if Point::get_offset_for_direction(direction2)
             .iter()
-            .all(|p| !elf_locations.contains(&(*p + self.location)))
+            .all(|p| elf_locations.binary_search(&(*p + self.location)).is_err())
         {
             direction = Some(direction2);
         } else if Point::get_offset_for_direction(direction3)
             .iter()
-            .all(|p| !elf_locations.contains(&(*p + self.location)))
+            .all(|p| elf_locations.binary_search(&(*p + self.location)).is_err())
         {
             direction = Some(direction3);
         } else if Point::get_offset_for_direction(direction4)
             .iter()
-            .all(|p| !elf_locations.contains(&(*p + self.location)))
+            .all(|p| elf_locations.binary_search(&(*p + self.location)).is_err())
         {
             direction = Some(direction4);
         }

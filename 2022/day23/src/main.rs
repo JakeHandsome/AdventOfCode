@@ -26,6 +26,7 @@ pub enum Direction {
 
 fn parse_initial_conditions(input: &str) -> Vec<Elf> {
     let mut elves = vec![];
+    // Reverse the input so positive Y is North, easier to wrap my head around
     for (y, line) in input.lines().rev().enumerate() {
         for (x, char) in line.chars().enumerate() {
             if char == '#' {
@@ -40,11 +41,12 @@ fn part1(input: &str) -> R<usize> {
     let mut elves = parse_initial_conditions(input);
     let num_rounds = 10;
     for round in 0..num_rounds {
-        let elf_positions = elves.iter().map(|x| x.location).collect::<Vec<_>>();
+        let mut elf_positions = elves.iter().map(|x| x.location).collect::<Vec<_>>();
+        elf_positions.sort();
         let mut new_locations = vec![];
         // Round 1
         for elf in elves.iter_mut() {
-            let proposal = elf.propose_movement(elf_positions.clone(), round);
+            let proposal = elf.propose_movement(&elf_positions, round);
             elf.proposal = proposal;
             if let Some(move_point) = proposal {
                 new_locations.push(move_point);
@@ -79,11 +81,12 @@ fn part2(input: &str) -> R<usize> {
     let mut elves = parse_initial_conditions(input);
     let mut round = 0;
     loop {
-        let elf_positions = elves.iter().map(|x| x.location).collect::<Vec<_>>();
+        let mut elf_positions = elves.iter().map(|x| x.location).collect::<Vec<_>>();
+        elf_positions.sort();
         let mut new_locations = vec![];
         // Round 1
         for elf in elves.iter_mut() {
-            let proposal = elf.propose_movement(elf_positions.clone(), round);
+            let proposal = elf.propose_movement(&elf_positions, round);
             elf.proposal = proposal;
             if let Some(move_point) = proposal {
                 new_locations.push(move_point);
@@ -145,43 +148,50 @@ mod tests {
     #[test]
     fn elf_isolated() {
         let elf = Elf::new(0, 0);
-        let locations = vec![Point::new(0, 0)];
-
-        assert_eq!(elf.propose_movement(locations, 0), None);
+        let mut locations = vec![Point::new(0, 0)];
+        locations.sort();
+        assert_eq!(elf.propose_movement(&locations, 0), None);
     }
 
     #[test]
     fn elf_move_north() {
         let elf = Elf::new(0, 0);
-        let locations = vec![Point::new(0, 0), Point::new(1, 0)];
+        let mut locations = vec![Point::new(0, 0), Point::new(1, 0)];
+        locations.sort();
 
-        assert_eq!(elf.propose_movement(locations, 0), Some(Point::NORTH));
+        assert_eq!(elf.propose_movement(&locations, 0), Some(Point::NORTH));
     }
 
     #[test]
     fn elf_move_south() {
         let elf = Elf::new(0, 0);
-        let locations = vec![Point::new(0, 0), Point::new(0, 1)];
-        assert_eq!(elf.propose_movement(locations, 0), Some(Point::SOUTH));
-        let locations = vec![Point::new(0, 0), Point::new(-1, 1)];
-        assert_eq!(elf.propose_movement(locations, 0), Some(Point::SOUTH));
-        let locations = vec![Point::new(0, 0), Point::new(1, 1)];
-        assert_eq!(elf.propose_movement(locations, 0), Some(Point::SOUTH));
+        let mut locations = vec![Point::new(0, 0), Point::new(0, 1)];
+        locations.sort();
+        assert_eq!(elf.propose_movement(&locations, 0), Some(Point::SOUTH));
+        let mut locations = vec![Point::new(0, 0), Point::new(-1, 1)];
+        locations.sort();
+        assert_eq!(elf.propose_movement(&locations, 0), Some(Point::SOUTH));
+        let mut locations = vec![Point::new(0, 0), Point::new(1, 1)];
+        locations.sort();
+        assert_eq!(elf.propose_movement(&locations, 0), Some(Point::SOUTH));
     }
 
     #[test]
     fn elf_move_west() {
         let elf = Elf::new(0, 0);
-        let locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(0, -1)];
-        assert_eq!(elf.propose_movement(locations, 0), Some(Point::WEST));
-        let locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, -1)];
-        assert_eq!(elf.propose_movement(locations, 0), Some(Point::WEST));
+        let mut locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(0, -1)];
+        locations.sort();
+        assert_eq!(elf.propose_movement(&locations, 0), Some(Point::WEST));
+        let mut locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(1, -1)];
+        locations.sort();
+        assert_eq!(elf.propose_movement(&locations, 0), Some(Point::WEST));
     }
     #[test]
     fn elf_move_east() {
         let elf = Elf::new(0, 0);
-        let locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(0, -1), Point::new(-1, 0)];
+        let mut locations = vec![Point::new(0, 0), Point::new(0, 1), Point::new(0, -1), Point::new(-1, 0)];
+        locations.sort();
 
-        assert_eq!(elf.propose_movement(locations, 0), Some(Point::EAST));
+        assert_eq!(elf.propose_movement(&locations, 0), Some(Point::EAST));
     }
 }
