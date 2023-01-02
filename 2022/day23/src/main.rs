@@ -1,6 +1,6 @@
 use common::*;
 use elf::Elf;
-
+use rayon::prelude::*;
 fn main() {
     let input = read_input_file_for_project_as_string!();
     {
@@ -43,16 +43,22 @@ fn part1(input: &str) -> R<usize> {
     for round in 0..num_rounds {
         let mut elf_positions = elves.iter().map(|x| x.location).collect::<Vec<_>>();
         elf_positions.sort();
-        let mut new_locations = vec![];
-        // Round 1
-        for elf in elves.iter_mut() {
-            let proposal = elf.propose_movement(&elf_positions, round);
-            elf.proposal = proposal;
-            if let Some(move_point) = proposal {
-                new_locations.push(move_point);
-            }
-        }
-        // Round 2
+        // First half of round
+        let new_locations = elves
+            .par_iter_mut()
+            .map(|elf| {
+                let proposal = elf.propose_movement(&elf_positions, round);
+                elf.proposal = proposal;
+                if let Some(move_point) = proposal {
+                    Some(move_point)
+                } else {
+                    None
+                }
+            })
+            .filter(|x| x.is_some())
+            .map(|x| x.unwrap())
+            .collect::<Vec<_>>();
+        // Second half of round
         for elf in elves.iter_mut() {
             if let Some(proposal) = elf.proposal {
                 // Make sure this is the only elf with this proposal
@@ -83,20 +89,26 @@ fn part2(input: &str) -> R<usize> {
     loop {
         let mut elf_positions = elves.iter().map(|x| x.location).collect::<Vec<_>>();
         elf_positions.sort();
-        let mut new_locations = vec![];
-        // Round 1
-        for elf in elves.iter_mut() {
-            let proposal = elf.propose_movement(&elf_positions, round);
-            elf.proposal = proposal;
-            if let Some(move_point) = proposal {
-                new_locations.push(move_point);
-            }
-        }
+        // First half of round
+        let new_locations = elves
+            .par_iter_mut()
+            .map(|elf| {
+                let proposal = elf.propose_movement(&elf_positions, round);
+                elf.proposal = proposal;
+                if let Some(move_point) = proposal {
+                    Some(move_point)
+                } else {
+                    None
+                }
+            })
+            .filter(|x| x.is_some())
+            .map(|x| x.unwrap())
+            .collect::<Vec<_>>();
         // If no new locations where proposed, nothing needs to move
         if new_locations.is_empty() {
             break Ok(round + 1);
         }
-        // Round 2
+        // Second half of round
         for elf in elves.iter_mut() {
             if let Some(proposal) = elf.proposal {
                 // Make sure this is the only elf with this proposal
