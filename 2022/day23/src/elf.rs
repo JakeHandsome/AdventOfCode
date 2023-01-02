@@ -8,7 +8,7 @@ pub struct Elf {
 }
 
 impl Elf {
-    pub fn new(x: isize, y: isize) -> Self {
+    pub const fn new(x: isize, y: isize) -> Self {
         Self {
             location: Point { x, y },
             proposal: None,

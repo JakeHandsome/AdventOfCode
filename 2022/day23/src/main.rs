@@ -73,9 +73,9 @@ fn part1(input: &str) -> R<usize> {
     let max_y = ys.clone().max().unwrap();
     let min_y = ys.min().unwrap();
 
-    let area = (1 + max_x - min_x) * (1 + max_y - min_y);
+    let area: usize = ((1 + max_x - min_x) * (1 + max_y - min_y)).try_into().unwrap();
 
-    Ok(area as usize - elves.len())
+    Ok(area - elves.len())
 }
 
 fn part2(input: &str) -> R<usize> {
@@ -98,8 +98,8 @@ fn part2(input: &str) -> R<usize> {
         if new_locations.is_empty() {
             break Ok(round + 1);
         }
-        // Second half of round
-        for elf in elves.iter_mut() {
+        // Second hf rou.iter_mut()nd
+        for elf in &mut elves {
             if let Some(proposal) = elf.proposal {
                 // Make sure this is the only elf with this proposal
                 if new_locations.iter().filter(|f| **f == proposal).count() == 1 {
