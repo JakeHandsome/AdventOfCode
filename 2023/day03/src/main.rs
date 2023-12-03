@@ -1,5 +1,3 @@
-use std::{collections::HashSet, error::Error, fmt::Pointer};
-
 use common::*;
 
 fn main() {
@@ -15,12 +13,14 @@ fn main() {
 }
 
 // Parse the symbols, the numbers with their position in the matrix
-fn parse_input(input: &str) -> Result<(Vec<Number>, Vec<Symbol>), Box<dyn Error>> {
+fn parse_input(input: &str) -> (Vec<Number>, Vec<Symbol>) {
     let mut numbers = vec![];
     let mut symbols = vec![];
     let mut index = 0;
     let mut number_start_index = None;
+    // Width is how far until the first new line
     let width = input.find('\n').unwrap();
+    // Remove newlines so the index will be accurate
     let input = input.replace('\n', "");
     while index < input.len() {
         let current_char = input.as_bytes()[index];
@@ -28,10 +28,9 @@ fn parse_input(input: &str) -> Result<(Vec<Number>, Vec<Symbol>), Box<dyn Error>
             number_start_index = Some(index);
         } else if number_start_index.is_some() && !current_char.is_ascii_digit() {
             let start_index = number_start_index.take().unwrap();
-            let start = ((start_index / width) as isize, (start_index % width) as isize);
             let number = Number {
-                value: input[start_index..index].parse()?,
-                start,
+                value: input[start_index..index].parse().unwrap(),
+                start: ((start_index / width) as isize, (start_index % width) as isize),
                 len: index - start_index,
             };
             numbers.push(number);
@@ -41,7 +40,7 @@ fn parse_input(input: &str) -> Result<(Vec<Number>, Vec<Symbol>), Box<dyn Error>
         }
         index += 1;
     }
-    Ok((numbers, symbols))
+    (numbers, symbols)
 }
 
 #[derive(Debug)]
@@ -54,9 +53,9 @@ struct Number {
 impl Number {
     // Find if this number is adjacent to any of the symbols passed in
     fn is_adjacent_to_symbol(&self, symbols: &[Symbol]) -> bool {
-        let mut points = HashSet::new();
+        let mut points = vec![];
         for i in 0..self.len {
-            points.insert((self.start.0, self.start.1 + i as isize));
+            points.push((self.start.0, self.start.1 + i as isize));
         }
         for (y, x) in points {
             let adjacent_points = vec![
@@ -99,7 +98,7 @@ impl Symbol {
 /// was include in the sum. This made part 2 difficult since part 2 was much easier to find a
 /// symbol and count the numbers
 fn part1(input: &str) -> R<usize> {
-    let (numbers, symbols) = parse_input(input)?;
+    let (numbers, symbols) = parse_input(input);
     Ok(numbers
         .into_iter()
         .filter_map(|x| {
@@ -116,7 +115,7 @@ fn part1(input: &str) -> R<usize> {
 // got the product. I realize I didnt not check specifically for the '*' symbol but it worked :)
 // I was able to reuse a bit of part2 but it is a bit slow
 fn part2(input: &str) -> R<usize> {
-    let (numbers, symbols) = parse_input(input)?;
+    let (numbers, symbols) = parse_input(input);
     Ok(symbols.into_iter().filter_map(|x| x.gear_ratio(&numbers)).sum())
 }
 
