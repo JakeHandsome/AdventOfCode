@@ -15,12 +15,12 @@ fn main() {
 }
 
 #[derive(Default, Debug)]
-struct Mapping(Vec<(Range<usize>, usize, usize)>);
+struct Mapping(Vec<(Range<usize>, usize)>);
 
 impl Mapping {
     fn get(&self, key: usize) -> usize {
         // If the mapping exist in any mapping return the number
-        for (range, dest, len) in &self.0 {
+        for (range, dest) in &self.0 {
             if range.contains(&key) {
                 return key - range.start + dest;
             }
@@ -31,21 +31,12 @@ impl Mapping {
 }
 
 fn part1(input: &str) -> R<usize> {
-    let mut mappings = vec![];
     let mut lines = input.lines();
     // First line is seeds
-    let seeds = lines
-        .next()
-        .unwrap()
-        .split(':')
-        .nth(1)
-        .unwrap()
-        .trim()
-        .split(' ')
+    let seeds = parse_seeds(&mut lines);
+    let mappings = parse_mappings(lines);
+    Ok(seeds
         .into_iter()
-        .map(|x| x.parse::<usize>().unwrap());
-    parse_mappings(lines, &mut mappings);
-    let min_seed = seeds
         .map(|seed| {
             let mut seed = seed;
             for mapping in &mappings {
@@ -54,11 +45,11 @@ fn part1(input: &str) -> R<usize> {
             seed
         })
         .min()
-        .unwrap();
-    Ok(min_seed)
+        .unwrap())
 }
 
-fn parse_mappings(lines: std::str::Lines<'_>, mappings: &mut Vec<Mapping>) {
+fn parse_mappings(lines: std::str::Lines<'_>) -> Vec<Mapping> {
+    let mut mappings = vec![];
     let mut current_mapping = Mapping::default();
     for line in lines {
         if line.is_empty() {
@@ -72,30 +63,20 @@ fn parse_mappings(lines: std::str::Lines<'_>, mappings: &mut Vec<Mapping>) {
         let numbers = line.split(' ').map(|x| x.parse::<usize>().unwrap()).collect::<Vec<_>>();
         let (dest, source, len) = (numbers[0], numbers[1], numbers[2]);
         let input_range = source..source + len;
-        let map = (input_range, dest, len);
+        let map = (input_range, dest);
         current_mapping.0.push(map)
     }
     mappings.push(current_mapping);
+    mappings
 }
 
 fn part2(input: &str) -> R<usize> {
-    let mut mappings = vec![];
     let mut lines = input.lines();
     // First line is seeds
-    let seeds = lines
-        .next()
-        .unwrap()
-        .split(':')
-        .nth(1)
-        .unwrap()
-        .trim()
-        .split(' ')
-        .into_iter()
-        .map(|x| x.parse::<usize>().unwrap())
-        .collect::<Vec<_>>();
-    let seeds2 = seeds.par_chunks(2).flat_map(|x| x[0]..x[0] + x[1]);
-    parse_mappings(lines, &mut mappings);
-    let min_seed = seeds2
+    let seeds = parse_seeds(&mut lines);
+    let seeds = seeds.par_chunks(2).flat_map(|x| x[0]..x[0] + x[1]);
+    let mappings = parse_mappings(lines);
+    Ok(seeds
         .map(|seed| {
             let mut seed = seed;
             for mapping in &mappings {
@@ -104,8 +85,21 @@ fn part2(input: &str) -> R<usize> {
             seed
         })
         .min()
-        .unwrap();
-    Ok(min_seed)
+        .unwrap())
+}
+
+fn parse_seeds(lines: &mut std::str::Lines<'_>) -> Vec<usize> {
+    let seeds = lines
+        .next()
+        .unwrap()
+        .split(':')
+        .nth(1)
+        .unwrap()
+        .trim()
+        .split(' ')
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect::<Vec<_>>();
+    seeds
 }
 
 #[cfg(test)]
