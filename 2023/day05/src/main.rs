@@ -19,7 +19,7 @@ struct Mapping(Vec<(Range<usize>, usize)>);
 
 impl Mapping {
     fn get(&self, key: usize) -> usize {
-        // If the mapping exist in any mapping return the number
+        // If the mapping exist in any range, map it to the output range
         for (range, dest) in &self.0 {
             if range.contains(&key) {
                 return key - range.start + dest;
@@ -70,10 +70,12 @@ fn parse_mappings(lines: std::str::Lines<'_>) -> Vec<Mapping> {
     mappings
 }
 
+//  Takes about ~3 seconds to run in release on 7950x due to the large number of seeds to check
 fn part2(input: &str) -> R<usize> {
     let mut lines = input.lines();
     // First line is seeds
     let seeds = parse_seeds(&mut lines);
+    // Convert the pairs of numbers into ranges and flat_map them to make a new iterator over all numbers. This is the only change needed for pt2
     let seeds = seeds.par_chunks(2).flat_map(|x| x[0]..x[0] + x[1]);
     let mappings = parse_mappings(lines);
     Ok(seeds
