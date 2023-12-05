@@ -110,11 +110,7 @@ impl Timer {
 
 impl Drop for Timer {
     fn drop(&mut self) {
-        println!(
-            "Time of {}, {}ms",
-            self.message,
-            self.start_time.elapsed().unwrap().as_millis()
-        )
+        println!("Time of {}, {:?}", self.message, self.start_time.elapsed().unwrap())
     }
 }
 
@@ -132,3 +128,4 @@ macro_rules! read_input_file_for_project_as_string {
         common::read_input_as_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("Input.txt"))
     };
 }
+
