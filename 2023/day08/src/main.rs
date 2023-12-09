@@ -16,17 +16,9 @@ fn main() {
 }
 
 fn part1(input: &str) -> R<usize> {
+    // Replace all the irrelevant characters to just use a .split_whitespace parser
     let input = input.replace(['(', ')', ',', '='], "");
-    let mut lines = input.lines();
-    let instructions = lines.next().unwrap().chars().cycle();
-    let mut map = HashMap::new();
-    for line in lines {
-        if line.is_empty() {
-            continue;
-        }
-        let split = line.split_whitespace().collect::<Vec<_>>();
-        map.insert(split[0], (split[1], split[2]));
-    }
+    let (instructions, map) = parse_inputs(&input);
 
     let mut current = "AAA";
     let mut instructions_followed = 1;
@@ -48,19 +40,11 @@ fn part1(input: &str) -> R<usize> {
 // Ouput will be cyclical. Find the answer for each starting number and then use least common
 // multiple to find when they all sync up
 fn part2(input: &str) -> R<usize> {
+    // Replace all the irrelevant characters to just use a .split_whitespace parser
     let input = input.replace(['(', ')', ',', '='], "");
-    let mut lines = input.lines();
-    let instructions = lines.next().unwrap().chars().cycle();
-    let mut map = HashMap::new();
-    for line in lines {
-        if line.is_empty() {
-            continue;
-        }
-        let split = line.split_whitespace().collect::<Vec<_>>();
-        map.insert(split[0], (split[1], split[2]));
-    }
+    let (instructions, map) = parse_inputs(&input);
 
-    let currents = map
+    let instructions_followed = map
         .keys()
         .filter(|x| x.ends_with('A'))
         .map(|mut current| {
@@ -82,7 +66,21 @@ fn part2(input: &str) -> R<usize> {
         })
         .collect::<Vec<_>>();
 
-    Ok(least_common_multiple_many(&currents))
+    Ok(least_common_multiple_many(&instructions_followed))
+}
+
+fn parse_inputs(input: &str) -> (std::iter::Cycle<std::str::Chars<'_>>, HashMap<&str, (&str, &str)>) {
+    let mut lines = input.lines();
+    let instructions = lines.next().unwrap().chars().cycle();
+    let mut map = HashMap::new();
+    for line in lines {
+        if line.is_empty() {
+            continue;
+        }
+        let split = line.split_whitespace().collect::<Vec<_>>();
+        map.insert(split[0], (split[1], split[2]));
+    }
+    (instructions, map)
 }
 
 // Finds the lcm of multiple numbers using recursion
