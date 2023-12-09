@@ -14,6 +14,9 @@ fn main() {
     }
 }
 
+// Carry a vec<vec<isize>> and make a new vec for each round until it is all 0s.
+// Then look at the last value and append each round in revers back to the first. Return last
+// number of first vec
 fn solve_line_p1(line: &str) -> isize {
     let mut rounds = vec![];
     let initial = line
@@ -37,6 +40,11 @@ fn solve_line_p1(line: &str) -> isize {
 fn part1(input: &str) -> R<isize> {
     Ok(input.lines().map(solve_line_p1).sum())
 }
+
+// Use VecDeque (for ability to push_front) instead of vec.
+// Create all vecs same as pt1.
+// Use a subtract and push_foront each round in reverse.
+// Return first item from first VecDeque
 fn solve_line_p2(line: &str) -> isize {
     let mut rounds = VecDeque::new();
     let initial = line
@@ -45,7 +53,8 @@ fn solve_line_p2(line: &str) -> isize {
         .collect::<VecDeque<_>>();
     rounds.push_back(initial);
     while !rounds.back().unwrap().iter().all(|x| *x == 0) {
-        let last_round = rounds.back_mut().unwrap().make_contiguous();
+        // must make_contiguous to get a single make_contiguous slice
+        let last_round = rounds.back_mut().unwrap().make_contiguous(); // Must
         let next_round = last_round.windows(2).map(|x| x[1] - x[0]).collect();
         rounds.push_back(next_round);
     }
@@ -85,9 +94,4 @@ mod tests {
     fn p2_testl3() {
         assert_eq!(solve_line_p2(SAMPLE1.lines().nth(2).unwrap()), 5);
     }
-    /*
-    #[test]
-    fn p2_test() {
-        assert_eq!(part2(SAMPLE1).unwrap(), 114);
-    }*/
 }
