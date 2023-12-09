@@ -1,7 +1,7 @@
 use std::{collections::HashMap};
 
 use common::*;
-use rayon::prelude::*;
+
 
 type MonkeyName = String;
 type Yells = HashMap<MonkeyName, MonkeyYell>;

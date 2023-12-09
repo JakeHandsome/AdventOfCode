@@ -1,6 +1,6 @@
 use common::*;
 use elf::Elf;
-use rayon::prelude::*;
+
 fn main() {
     let input = read_input_file_for_project_as_string!();
     {

@@ -1,7 +1,7 @@
 use std::vec;
 
 use common::*;
-use rayon::prelude::*;
+
 
 /// This solution has multiple iterations of getting an answer with different timer intervals
 /// My first part 2 solution was ran single threadded and took ~6 mins on a 7950X

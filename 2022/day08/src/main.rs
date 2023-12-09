@@ -99,7 +99,7 @@ fn part1(input: &str) -> R<usize> {
     for col in 0..forest.width {
         let mut max_height = 0;
         // Do a vision check from the top to bottom
-        for mut tree in forest.get_col_mut(col) {
+        for tree in forest.get_col_mut(col) {
             if tree.height > max_height {
                 max_height = tree.height;
                 tree.visible = true;
@@ -107,7 +107,7 @@ fn part1(input: &str) -> R<usize> {
         }
         max_height = 0;
         // Do a vision check from bottom to top
-        for mut tree in forest.get_col_mut(col).into_iter().rev() {
+        for tree in forest.get_col_mut(col).into_iter().rev() {
             if tree.height > max_height {
                 max_height = tree.height;
                 tree.visible = true;
@@ -116,14 +116,14 @@ fn part1(input: &str) -> R<usize> {
     }
     for row in 0..forest.width {
         let mut max_height = 0;
-        for mut tree in forest.get_row_mut(row) {
+        for tree in forest.get_row_mut(row) {
             if tree.height > max_height {
                 max_height = tree.height;
                 tree.visible = true;
             }
         }
         max_height = 0;
-        for mut tree in forest.get_row_mut(row).into_iter().rev() {
+        for tree in forest.get_row_mut(row).into_iter().rev() {
             if tree.height > max_height {
                 max_height = tree.height;
                 tree.visible = true;
