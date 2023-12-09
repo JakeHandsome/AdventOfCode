@@ -12,12 +12,12 @@ fn main() {
     }
 }
 
-fn part1(input: &str) -> R<usize> {
-    Err(Box::new(AdventOfCodeError::new("Not implemented")))
+fn part1(input: &str) -> anyhow::Result<usize> {
+    Err(AdventOfCodeError::UnimplementedError)?
 }
 
-fn part2(input: &str) -> R<usize> {
-    Err(Box::new(AdventOfCodeError::new("Not implemented")))
+fn part2(input: &str) -> anyhow::Result<usize> {
+    Err(AdventOfCodeError::UnimplementedError)?
 }
 
 #[cfg(test)]
@@ -26,7 +26,7 @@ mod tests {
     const SAMPLE1: &str = r#""#;
     #[test]
     fn p1_test() {
-        assert_eq!(part1(SAMPLE1).unwrap(), 13140);
+        assert_eq!(part1(SAMPLE1).unwrap(), 0);
     }
     #[test]
     fn p2_test() {

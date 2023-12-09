@@ -17,7 +17,7 @@ fn part1(input: &str) -> R<String> {
 }
 
 fn part2(_input: &str) -> R<usize> {
-    Err(Box::new(AdventOfCodeError::new("Not implemented")))
+    Err(Box::new(AdventOfCodeError::new("Not implemented")))?
 }
 
 fn snafu_to_decimal(input: &str) -> isize {

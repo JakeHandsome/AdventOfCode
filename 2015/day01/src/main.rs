@@ -24,7 +24,7 @@ fn part2(input: &str) -> R<usize> {
             return Ok(i + 1);
         }
     }
-    Err(Box::new(AdventOfCodeError::new("Never went in basement")))
+    Err(Box::new(AdventOfCodeError::new("Never went in basement")))?
 }
 
 #[cfg(test)]
@@ -42,3 +42,4 @@ mod tests {
         assert_eq!(part2("()())").unwrap(), 5);
     }
 }
+

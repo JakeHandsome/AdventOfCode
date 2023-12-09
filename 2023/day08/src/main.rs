@@ -34,7 +34,7 @@ fn part1(input: &str) -> R<usize> {
         instructions_followed += 1;
     }
 
-    Err(Box::new(AdventOfCodeError::new("Not implemented")))
+    Err(AdventOfCodeError::UnimplementedError)?
 }
 
 // Ouput will be cyclical. Find the answer for each starting number and then use least common

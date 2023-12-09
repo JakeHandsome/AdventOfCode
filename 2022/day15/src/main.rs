@@ -109,7 +109,7 @@ fn part2(input: &str, max_coord: isize) -> R<usize> {
         return Ok(x as usize * 4_000_000 + y as usize);
     }
 
-    Err(Box::new(AdventOfCodeError::new("Not found")))
+    Err(Box::new(AdventOfCodeError::new("Not found")))?
 }
 
 #[cfg(test)]

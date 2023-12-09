@@ -54,7 +54,7 @@ fn solve_line_p2(line: &str) -> isize {
     rounds.push_back(initial);
     while !rounds.back().unwrap().iter().all(|x| *x == 0) {
         // must make_contiguous to get a single make_contiguous slice
-        let last_round = rounds.back_mut().unwrap().make_contiguous(); // Must
+        let last_round = rounds.back_mut().unwrap().make_contiguous();
         let next_round = last_round.windows(2).map(|x| x[1] - x[0]).collect();
         rounds.push_back(next_round);
     }

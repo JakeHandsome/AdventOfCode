@@ -36,7 +36,7 @@ fn find_index_of_unique_char(input: &str, consecutive_chars: usize) -> R<usize> 
     Err(Box::new(AdventOfCodeError::new(format!(
         "Failed to find sequence of {} unique chars",
         consecutive_chars
-    ))))
+    ))))?
 }
 
 #[cfg(test)]

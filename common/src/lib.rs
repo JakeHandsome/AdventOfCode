@@ -1,6 +1,5 @@
 use std::{
     env,
-    error::Error,
     fs::{self, File},
     io::{self, BufRead, BufReader, Lines},
     path::Path,
@@ -8,7 +7,7 @@ use std::{
 };
 
 // Short hand result type for a dyn Error
-pub type R<T> = Result<T, Box<dyn Error>>;
+pub type R<T> = anyhow::Result<T>;
 
 pub fn read_input_as_string<P>(input: P) -> String
 where
@@ -34,27 +33,26 @@ where
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct AdventOfCodeError(String);
-const DAY_ERR_MESSAGE: &str = "Day folder not in correct format. Folder should end with 2 digits for the date Ex: 01";
-const YEAR_ERR_MESSAGE: &str =
-    "Year folder not in correct format. Folder should end with 4 digits for the Year Ex: 2022";
-impl std::fmt::Display for AdventOfCodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
+#[derive(thiserror::Error, Debug)]
+pub enum AdventOfCodeError {
+    #[error("Day folder not in correct format. Folder should end with 2 digits for the date Ex: 01")]
+    DayError,
+    #[error("Year folder not in correct format. Folder should end with 4 digits for the Year Ex: 2022")]
+    YearError,
+    #[error("Day Not Implemented")]
+    UnimplementedError,
+    #[error("Cannot Downlaod files other than 'Input.txt'")]
+    DownloadError,
+    #[error("Custom Error: {0}")]
+    Custom(String),
 }
-impl Error for AdventOfCodeError {}
 impl AdventOfCodeError {
-    pub fn new<S>(s: S) -> AdventOfCodeError
-    where
-        S: Into<String>,
-    {
-        AdventOfCodeError(s.into())
+    pub fn new<T: AsRef<str>>(msg: T) -> Self {
+        AdventOfCodeError::Custom(msg.as_ref().to_string())
     }
 }
 
-fn download_file_if_doesnt_exist(input: &Path) -> Result<(), Box<dyn Error>> {
+fn download_file_if_doesnt_exist(input: &Path) -> anyhow::Result<()> {
     if input.is_file() {
         // file already exists, no need to do anthing
         Ok(())
@@ -65,14 +63,14 @@ fn download_file_if_doesnt_exist(input: &Path) -> Result<(), Box<dyn Error>> {
         let _ = it.next(); // This is the file name it can be ignored
         let day = it
             .next()
-            .ok_or_else(|| Box::new(AdventOfCodeError::new(DAY_ERR_MESSAGE)))?
+            .ok_or(AdventOfCodeError::DayError)?
             .to_str()
-            .ok_or_else(|| Box::new(AdventOfCodeError::new(DAY_ERR_MESSAGE)))?; //This is the folder with the day in the form (day##)
+            .ok_or(AdventOfCodeError::DayError)?;
         let year = it
             .next()
-            .ok_or_else(|| Box::new(AdventOfCodeError::new(YEAR_ERR_MESSAGE)))?
+            .ok_or(AdventOfCodeError::YearError)?
             .to_str()
-            .ok_or_else(|| Box::new(AdventOfCodeError::new(YEAR_ERR_MESSAGE)))?;
+            .ok_or(AdventOfCodeError::YearError)?;
         let day = &day[day.len() - 2..].parse::<usize>()?;
         let year = &year[year.len() - 4..];
         // Session token to come from envvar
@@ -85,9 +83,7 @@ fn download_file_if_doesnt_exist(input: &Path) -> Result<(), Box<dyn Error>> {
         fs::write(input, res.text()?)?;
         Ok(())
     } else {
-        Err(Box::new(AdventOfCodeError::new(
-            "Cannot download files other than 'Input.txt'",
-        )))
+        Err(AdventOfCodeError::DownloadError)?
     }
 }
 
@@ -128,4 +124,12 @@ macro_rules! read_input_file_for_project_as_string {
         common::read_input_as_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("Input.txt"))
     };
 }
+
+pub use anyhow;
+pub use itertools::Itertools;
+pub use num;
+pub use petgraph;
+pub use rayon::prelude::*;
+pub use regex;
+pub use winnow;
 

@@ -1,5 +1,4 @@
 use common::*;
-use rayon::prelude::*;
 use std::ops::Range;
 
 fn main() {
@@ -149,3 +148,4 @@ humidity-to-location map:
         assert_eq!(part2(SAMPLE1).unwrap(), 46);
     }
 }
+

@@ -1,5 +1,5 @@
 [package]
-name = "{{project-name}}"
+name = "day02"
 version.workspace = true
 edition.workspace = true
 
