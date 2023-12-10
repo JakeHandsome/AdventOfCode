@@ -13,4 +13,4 @@ opt-level = 2
 
 [workspace.dependencies]
 rayon = "1.8.0"
-common = { path = "common" }
+common = { path = "../common" }
