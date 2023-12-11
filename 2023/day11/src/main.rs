@@ -35,10 +35,7 @@ fn manhatten_distance(a: &Point, b: &Point) -> isize {
 
 fn part1(input: &str) -> anyhow::Result<isize> {
     let (mut galaxies, empty_rows, empty_cols) = parse_input(input);
-    for galaxy in &mut galaxies {
-        galaxy.row += empty_rows.iter().filter(|x| **x < galaxy.row).count() as isize;
-        galaxy.col += empty_cols.iter().filter(|x| **x < galaxy.col).count() as isize;
-    }
+    expand_space(&mut galaxies, empty_rows, empty_cols, 2);
     Ok(galaxies
         .into_iter()
         .tuple_combinations()
@@ -48,19 +45,24 @@ fn part1(input: &str) -> anyhow::Result<isize> {
 
 fn part2(input: &str) -> anyhow::Result<isize> {
     let (mut galaxies, empty_rows, empty_cols) = parse_input(input);
-    for galaxy in &mut galaxies {
-        #[cfg(test)]
-        const MULTIPLE: isize = 10 - 1; //Idk why -1 is needed but it works
-        #[cfg(not(test))]
-        const MULTIPLE: isize = 1_000_000 - 1; //Idk why -1 is needed but it works
-        galaxy.row += MULTIPLE * empty_rows.iter().filter(|x| **x < galaxy.row).count() as isize;
-        galaxy.col += MULTIPLE * empty_cols.iter().filter(|x| **x < galaxy.col).count() as isize;
-    }
+    #[cfg(test)]
+    const MULTIPLE: isize = 10;
+    #[cfg(not(test))]
+    const MULTIPLE: isize = 1_000_000;
+    expand_space(&mut galaxies, empty_rows, empty_cols, MULTIPLE);
     Ok(galaxies
         .into_iter()
         .tuple_combinations()
         .map(|(a, b)| manhatten_distance(&a, &b))
         .sum())
+}
+
+fn expand_space(galaxies: &mut Vec<Point>, empty_rows: Vec<isize>, empty_cols: Vec<isize>, empty_space_size: isize) {
+    let multiple = empty_space_size - 1; // Each empty space is already 1 so increase it by size -1
+    for galaxy in galaxies {
+        galaxy.row += multiple * empty_rows.iter().filter(|x| **x < galaxy.row).count() as isize;
+        galaxy.col += multiple * empty_cols.iter().filter(|x| **x < galaxy.col).count() as isize;
+    }
 }
 
 fn parse_input(input: &str) -> (Vec<Point>, Vec<isize>, Vec<isize>) {
