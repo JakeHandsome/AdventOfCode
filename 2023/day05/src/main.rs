@@ -148,4 +148,3 @@ humidity-to-location map:
         assert_eq!(part2(SAMPLE1).unwrap(), 46);
     }
 }
-
