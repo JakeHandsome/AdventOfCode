@@ -49,6 +49,9 @@ fn part1(input: &str) -> anyhow::Result<isize> {
 fn part2(input: &str) -> anyhow::Result<isize> {
     let (mut galaxies, empty_rows, empty_cols) = parse_input(input);
     for galaxy in &mut galaxies {
+        #[cfg(test)]
+        const MULTIPLE: isize = 10 - 1; //Idk why -1 is needed but it works
+        #[cfg(not(test))]
         const MULTIPLE: isize = 1_000_000 - 1; //Idk why -1 is needed but it works
         galaxy.row += MULTIPLE * empty_rows.iter().filter(|x| **x < galaxy.row).count() as isize;
         galaxy.col += MULTIPLE * empty_cols.iter().filter(|x| **x < galaxy.col).count() as isize;
