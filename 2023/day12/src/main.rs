@@ -120,41 +120,43 @@ fn solve_line2(input: &str) -> usize {
     get_solutions(&mut map, &puzzle, &key, 0, 0, 0)
 }
 
-// Recursive function that steps through the puzzle like a tree. If a '.' or '#' is found there is
-// a single path, but it diverges if a '?' is found. If the function finds a similar state, it will
-// use the previously calculated value.
-//
-// `map` HashMap of solved locations
-// `puzzle` the string input of #/./?
-// `key` the puzzle key ex: `[2,2]`
-// `puzzle_index` the index into the puzzle
-// `key_index` the index into the key
-// `current_count` the number of `#` in a row
-//
-// The map contains 3 index into puzzle, index into key, current number of `#` in a row.
-// If all of these variables are the same, the calculation will be the same so it can be saved in
-// map
-//
-// There are also optimaztions to end the puzzle cheking early if it is impossible to find a
-// solution given the current input
-//
-// # Example
-// Given the puzzle:
-// ???.## 2,2
-//
-// We can be at position 4 at two ways
-// ##..##
-//    ^
-// .##.##
-//    ^
-// In both these cases, puzzle index is 3, key index is 2, current count is 0 so the answer can be
-// re-used
-//
-// In the other case
-// #.#.##
-//  ^
-// The current_count(1) != key[0](2)  when there was a transition from # to . so it is impossible for this string
-// to have a solution so it exists early. Similar optimization exists when key_index > key.len()
+/// Recursive function that steps through the puzzle like a tree. If a '.' or '#' is found there is
+/// a single path, but it diverges if a '?' is found. If the function finds a similar state, it will
+/// use the previously calculated value.
+///
+/// `map` HashMap of solved locations
+/// `puzzle` the string input of #/./?
+/// `key` the puzzle key ex: `[2,2]`
+/// `puzzle_index` the index into the puzzle
+/// `key_index` the index into the key
+/// `current_count` the number of `#` in a row
+///
+/// The map contains 3 index into puzzle, index into key, current number of `#` in a row.
+/// If all of these variables are the same, the calculation will be the same so it can be saved in
+/// map
+///
+/// There are also optimaztions to end the puzzle cheking early if it is impossible to find a
+/// solution given the current input
+///
+/// # Example
+/// ```text
+/// Given the puzzle:
+/// ???.## 2,2
+///
+/// We can be at position 4 at two ways
+/// ##..##
+///    ^
+/// .##.##
+///    ^
+/// In both these cases, puzzle index is 3, key index is 2, current count is 0 so the answer can be
+/// re-used
+///
+/// In the other case
+/// #.#.##
+///  ^
+/// The current_count(1) != key[0](2) when there was a transition from # to . so it is impossible for this string
+/// to have a solution so it exists early. Similar optimization exists when key_index > key.len()
+/// ```
 fn get_solutions(
     map: &mut HashMap<(usize, usize, usize), usize>,
     puzzle: &str,
