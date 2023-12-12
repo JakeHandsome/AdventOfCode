@@ -1,10 +1,16 @@
+use std::collections::HashMap;
+
 use common::*;
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
     {
         let _timer = Timer::new("Part 1");
-        println!("Part1: {}", part1(&input).unwrap());
+        println!("Part1: {}", part1(&input, true).unwrap());
+    }
+    {
+        let _timer = Timer::new("Part 1");
+        println!("Part1: {}", part1(&input, false).unwrap());
     }
     {
         let _timer = Timer::new("Part 2");
@@ -12,8 +18,12 @@ fn main() {
     }
 }
 
-fn part1(input: &str) -> anyhow::Result<usize> {
-    Ok(input.lines().map(solve_line).sum())
+fn part1(input: &str, part1_algo: bool) -> anyhow::Result<usize> {
+    if part1_algo {
+        Ok(input.lines().map(solve_line).sum())
+    } else {
+        Ok(input.lines().map(solve_line2).sum())
+    }
 }
 
 fn solve_line(input: &str) -> usize {
@@ -89,7 +99,96 @@ fn is_solution(as_str: &str, key: &[usize]) -> bool {
 }
 
 fn part2(input: &str) -> anyhow::Result<usize> {
-    Ok(input.lines().map(|x| solve_line(&unfold_line(x))).sum())
+    Ok(input.lines().map(|x| solve_line2(&unfold_line(x))).sum())
+}
+
+fn solve_line2(input: &str) -> usize {
+    let mut split = input.split(' ');
+    let mut puzzle = split.next().unwrap().to_string();
+    // End all lines with '.' to fix end cases
+    puzzle.push('.');
+    let key = split
+        .next()
+        .unwrap()
+        .split(',')
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect_vec();
+    let mut map = HashMap::new();
+    let a = get_solutions(&mut map, &puzzle, &key, 0, 0, 0);
+    a
+}
+
+fn get_solutions(
+    map: &mut HashMap<(usize, usize, usize), usize>,
+    puzzle: &str,
+    key: &[usize],
+    puzzle_index: usize,
+    key_index: usize,
+    current_count: usize,
+) -> usize {
+    if map.contains_key(&(puzzle_index, key_index, current_count)) {
+        *map.get(&(puzzle_index, key_index, current_count)).unwrap()
+    } else {
+        if puzzle_index == puzzle.len() {
+            // If we are at the last character, the key index is at the end and current count is 0, we
+            // found a solution
+            if key_index == key.len() && current_count == 0 {
+                map.insert((puzzle_index, key_index, current_count), 1);
+                return 1;
+            } else {
+                // Last index, no solution return 0
+                return 0;
+            }
+        }
+        let current_char = puzzle.as_bytes()[puzzle_index] as char;
+        let mut solution = match current_char {
+            // case for '#'
+            '#' | '?' => {
+                let current_count = current_count + 1;
+                if let Some(max_count_for_index) = key.get(key_index) {
+                    if current_count <= *max_count_for_index {
+                        // Keep going
+                        get_solutions(map, puzzle, key, puzzle_index + 1, key_index, current_count)
+                    } else {
+                        // No more solutions found
+                        0
+                    }
+                } else {
+                    // No more solutions found
+                    0
+                }
+            }
+            _ => 0,
+        };
+        solution += match current_char {
+            // case for .
+            '.' | '?' => {
+                // If current count > 0 last char was '#'
+                if current_count != 0 {
+                    if let Some(max_count_for_index) = key.get(key_index) {
+                        // If the current count was max for this index, we could still have a match
+                        // so increment the key_index and continue
+                        if current_count == *max_count_for_index {
+                            let key_index = key_index + 1;
+                            let current_count = 0;
+                            get_solutions(map, puzzle, key, puzzle_index + 1, key_index, current_count)
+                        } else {
+                            // count is too high or low, no more solutions
+                            0
+                        }
+                    } else {
+                        // key_index is too far, no more solutions
+                        0
+                    }
+                } else {
+                    get_solutions(map, puzzle, key, puzzle_index + 1, key_index, current_count)
+                }
+            }
+            _ => 0,
+        };
+        map.insert((puzzle_index, key_index, current_count), solution);
+        solution
+    }
 }
 
 fn unfold_line(input: &str) -> String {
@@ -110,7 +209,7 @@ mod tests {
 ?###???????? 3,2,1"#;
     #[test]
     fn p1_test() {
-        assert_eq!(part1(SAMPLE1).unwrap(), 21);
+        assert_eq!(part1(SAMPLE1, true).unwrap(), 21);
     }
     #[test]
     fn p1_testl1() {
@@ -136,9 +235,33 @@ mod tests {
     fn p1_testl6() {
         assert_eq!(solve_line(SAMPLE1.lines().nth(5).unwrap()), 10);
     }
-    //#[test]
+    #[test]
+    fn p1_2_testl1() {
+        assert_eq!(solve_line2(SAMPLE1.lines().nth(0).unwrap()), 1);
+    }
+    #[test]
+    fn p1_2_testl2() {
+        assert_eq!(solve_line2(SAMPLE1.lines().nth(1).unwrap()), 4);
+    }
+    #[test]
+    fn p1_2_testl3() {
+        assert_eq!(solve_line2(SAMPLE1.lines().nth(2).unwrap()), 1);
+    }
+    #[test]
+    fn p1_2_testl4() {
+        assert_eq!(solve_line2(SAMPLE1.lines().nth(3).unwrap()), 1);
+    }
+    #[test]
+    fn p1_2_testl5() {
+        assert_eq!(solve_line2(SAMPLE1.lines().nth(4).unwrap()), 4);
+    }
+    #[test]
+    fn p1_2_testl6() {
+        assert_eq!(solve_line2(SAMPLE1.lines().nth(5).unwrap()), 10);
+    }
+    #[test]
     fn p2_test() {
-        assert_eq!(part2(SAMPLE1).unwrap(), 0);
+        assert_eq!(part2(SAMPLE1).unwrap(), 525152);
     }
     #[test]
     fn p2_testl1() {
@@ -147,26 +270,26 @@ mod tests {
             &a,
             "???.###????.###????.###????.###????.### 1,1,3,1,1,3,1,1,3,1,1,3,1,1,3"
         );
-        assert_eq!(solve_line(&a), 1);
+        assert_eq!(solve_line2(&a), 1);
     }
     #[test]
     fn p2_testl2() {
-        assert_eq!(solve_line(&unfold_line(SAMPLE1.lines().nth(1).unwrap())), 4);
+        assert_eq!(solve_line2(&unfold_line(SAMPLE1.lines().nth(1).unwrap())), 16384);
     }
     #[test]
     fn p2_testl3() {
-        assert_eq!(solve_line(&unfold_line(SAMPLE1.lines().nth(2).unwrap())), 1);
+        assert_eq!(solve_line2(&unfold_line(SAMPLE1.lines().nth(2).unwrap())), 1);
     }
     #[test]
     fn p2_testl4() {
-        assert_eq!(solve_line(&unfold_line(SAMPLE1.lines().nth(3).unwrap())), 1);
+        assert_eq!(solve_line2(&unfold_line(SAMPLE1.lines().nth(3).unwrap())), 16);
     }
     #[test]
     fn p2_testl5() {
-        assert_eq!(solve_line(&unfold_line(SAMPLE1.lines().nth(4).unwrap())), 4);
+        assert_eq!(solve_line2(&unfold_line(SAMPLE1.lines().nth(4).unwrap())), 2500);
     }
     #[test]
     fn p2_testl6() {
-        assert_eq!(solve_line(&unfold_line(SAMPLE1.lines().nth(5).unwrap())), 10);
+        assert_eq!(solve_line2(&unfold_line(SAMPLE1.lines().nth(5).unwrap())), 506250);
     }
 }
