@@ -131,7 +131,7 @@ fn solve_line2(input: &str) -> usize {
 /// `key_index` the index into the key
 /// `current_count` the number of `#` in a row
 ///
-/// The map contains 3 index into puzzle, index into key, current number of `#` in a row.
+/// The map contains 3 parts: index into puzzle, index into key, current number of `#` in a row.
 /// If all of these variables are the same, the calculation will be the same so it can be saved in
 /// map
 ///
