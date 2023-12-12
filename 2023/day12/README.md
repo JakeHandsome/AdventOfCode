@@ -1,0 +1,6 @@
+# Example for input 
+
+`?###???????? 3,2,1`
+
+
+![example](Sample_output.svg)
