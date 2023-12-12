@@ -6,11 +6,11 @@ fn main() {
     let input = read_input_file_for_project_as_string!();
     {
         let _timer = Timer::new("Part 1");
-        println!("Part1: {}", part1(&input, true).unwrap());
+        println!("Part1(original algorithm): {}", part1(&input, true).unwrap());
     }
     {
         let _timer = Timer::new("Part 1");
-        println!("Part1: {}", part1(&input, false).unwrap());
+        println!("Part1(new algorithm): {}", part1(&input, false).unwrap());
     }
     {
         let _timer = Timer::new("Part 2");
@@ -26,6 +26,7 @@ fn part1(input: &str, part1_algo: bool) -> anyhow::Result<usize> {
     }
 }
 
+// This is a brute force that checks every possible combination, too slow for part 2
 fn solve_line(input: &str) -> usize {
     let mut split = input.split(' ');
     let puzzle = split.next().unwrap();
@@ -102,6 +103,8 @@ fn part2(input: &str) -> anyhow::Result<usize> {
     Ok(input.lines().map(|x| solve_line2(&unfold_line(x))).sum())
 }
 
+// This solution steps through each char as a tree and looks for repeated solutions so it doesn't
+// need to re calculate
 fn solve_line2(input: &str) -> usize {
     let mut split = input.split(' ');
     let mut puzzle = split.next().unwrap().to_string();
@@ -114,10 +117,44 @@ fn solve_line2(input: &str) -> usize {
         .map(|x| x.parse::<usize>().unwrap())
         .collect_vec();
     let mut map = HashMap::new();
-    let a = get_solutions(&mut map, &puzzle, &key, 0, 0, 0);
-    a
+    get_solutions(&mut map, &puzzle, &key, 0, 0, 0)
 }
 
+// Recursive function that steps through the puzzle like a tree. If a '.' or '#' is found there is
+// a single path, but it diverges if a '?' is found. If the function finds a similar state, it will
+// use the previously calculated value.
+//
+// `map` HashMap of solved locations
+// `puzzle` the string input of #/./?
+// `key` the puzzle key ex: `[2,2]`
+// `puzzle_index` the index into the puzzle
+// `key_index` the index into the key
+// `current_count` the number of `#` in a row
+//
+// The map contains 3 index into puzzle, index into key, current number of `#` in a row.
+// If all of these variables are the same, the calculation will be the same so it can be saved in
+// map
+//
+// There are also optimaztions to end the puzzle cheking early if it is impossible to find a
+// solution given the current input
+//
+// # Example
+// Given the puzzle:
+// ???.## 2,2
+//
+// We can be at position 4 at two ways
+// ##..##
+//    ^
+// .##.##
+//    ^
+// In both these cases, puzzle index is 3, key index is 2, current count is 0 so the answer can be
+// re-used
+//
+// In the other case
+// #.#.##
+//  ^
+// The current_count(1) != key[0](2)  when there was a transition from # to . so it is impossible for this string
+// to have a solution so it exists early. Similar optimization exists when key_index > key.len()
 fn get_solutions(
     map: &mut HashMap<(usize, usize, usize), usize>,
     puzzle: &str,
@@ -150,11 +187,12 @@ fn get_solutions(
                         // Keep going
                         get_solutions(map, puzzle, key, puzzle_index + 1, key_index, current_count)
                     } else {
-                        // No more solutions found
+                        // No more solutions found because the current count is too low, not enough
+                        // consecutive `#`
                         0
                     }
                 } else {
-                    // No more solutions found
+                    // No more solutions found, key_index is out of range
                     0
                 }
             }
@@ -165,15 +203,16 @@ fn get_solutions(
             '.' | '?' => {
                 // If current count > 0 last char was '#'
                 if current_count != 0 {
-                    if let Some(max_count_for_index) = key.get(key_index) {
+                    if let Some(expected_count_for_index) = key.get(key_index) {
                         // If the current count was max for this index, we could still have a match
                         // so increment the key_index and continue
-                        if current_count == *max_count_for_index {
+                        if current_count == *expected_count_for_index {
                             let key_index = key_index + 1;
                             let current_count = 0;
                             get_solutions(map, puzzle, key, puzzle_index + 1, key_index, current_count)
                         } else {
-                            // count is too high or low, no more solutions
+                            //  The current count is not same as the expected there are no more
+                            //  solutions in this path
                             0
                         }
                     } else {
