@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use common::*;
 
@@ -16,7 +16,27 @@ fn main() {
         let _timer = Timer::new("Part 2");
         println!("Part2: {}", part2(&input).unwrap());
     }
+    // Make a graphical ouput to explain the solution
+    let input = "??#?###?????? 1,5,2"; // This is the input used to generate the graph
+
+    // let input = unfold_line(input);
+    let mut split = input.split(' ');
+
+
+    let mut puzzle = split.next().unwrap().to_string();
+    // End all lines with '.' to fix end cases
+    puzzle.push('.');
+    let key = split
+        .next()
+        .unwrap()
+        .split(',')
+        .map(|x| x.parse::<usize>().unwrap())
+        .collect_vec();
+    let mut map = BTreeMap::new();
+    _ = get_solutions(&mut map, &puzzle, &key, 0, 0, 0);
+    day12::create_visual_graph(map, puzzle, key);
 }
+
 
 fn part1(input: &str, part1_algo: bool) -> anyhow::Result<usize> {
     if part1_algo {
@@ -116,7 +136,7 @@ fn solve_line2(input: &str) -> usize {
         .split(',')
         .map(|x| x.parse::<usize>().unwrap())
         .collect_vec();
-    let mut map = HashMap::new();
+    let mut map = BTreeMap::new();
     get_solutions(&mut map, &puzzle, &key, 0, 0, 0)
 }
 
@@ -157,8 +177,8 @@ fn solve_line2(input: &str) -> usize {
 /// The current_count(1) != key[0](2) when there was a transition from # to . so it is impossible for this string
 /// to have a solution so it exists early. Similar optimization exists when key_index > key.len()
 /// ```
-fn get_solutions(
-    map: &mut HashMap<(usize, usize, usize), usize>,
+pub(crate) fn get_solutions(
+    map: &mut BTreeMap<(usize, usize, usize), usize>,
     puzzle: &str,
     key: &[usize],
     puzzle_index: usize,
@@ -175,6 +195,7 @@ fn get_solutions(
                 map.insert((puzzle_index, key_index, current_count), 1);
                 return 1;
             } else {
+                map.insert((puzzle_index, key_index, current_count), 0);
                 // Last index, no solution return 0
                 return 0;
             }
