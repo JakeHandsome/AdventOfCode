@@ -12,7 +12,7 @@ fn main() {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Mirror {
     inner: String,
     rows: usize,
@@ -45,15 +45,49 @@ impl Mirror {
             .map(|index| self.inner.as_bytes()[index] as char)
     }
 
-    fn find_reflection(&self) -> usize {
+    fn find_reflection(&self) -> Option<usize> {
         for row in (0..self.rows).collect_vec().windows(2) {
             if self.check_row(row[0], row[1]) {
-                return row[1] * 100;
+                return Some(row[1] * 100);
             }
         }
         for col in (0..self.cols).collect_vec().windows(2) {
             if self.check_col(col[0], col[1]) {
-                return col[1];
+                return Some(col[1]);
+            }
+        }
+        None
+    }
+
+    fn find_reflections(&self) -> Vec<usize> {
+        let mut reflections = vec![];
+        for row in (0..self.rows).collect_vec().windows(2) {
+            if self.check_row(row[0], row[1]) {
+                reflections.push(row[1] * 100);
+            }
+        }
+        for col in (0..self.cols).collect_vec().windows(2) {
+            if self.check_col(col[0], col[1]) {
+                reflections.push(col[1]);
+            }
+        }
+        reflections
+    }
+
+    fn find_smudge_reflection(&self) -> usize {
+        let original_reflection = self.find_reflection().unwrap();
+        for i in 0..self.inner.len() {
+            let mut copy = self.clone();
+            let char = copy.inner.as_bytes()[i] as char;
+            if char == '#' {
+                copy.inner.replace_range(i..=i, ".");
+            } else {
+                copy.inner.replace_range(i..=i, "#");
+            }
+            for x in copy.find_reflections() {
+                if x != original_reflection {
+                    return x;
+                }
             }
         }
         unreachable!();
@@ -111,11 +145,25 @@ fn part1(input: &str) -> anyhow::Result<usize> {
         }
     }
     mirrors.push(Mirror::new(current_mirror.take().unwrap()));
-    Ok(mirrors.into_iter().map(|x| x.find_reflection()).sum())
+    Ok(mirrors.into_iter().map(|x| x.find_reflection().unwrap()).sum())
 }
 
 fn part2(input: &str) -> anyhow::Result<usize> {
-    Err(AdventOfCodeError::UnimplementedError)?
+    let mut mirrors = vec![];
+    let mut current_mirror = Some(String::new());
+    for line in input.lines() {
+        if line.is_empty() {
+            mirrors.push(Mirror::new(current_mirror.take().unwrap()));
+            current_mirror = Some(String::new());
+        } else if let Some(mirror) = &mut current_mirror {
+            mirror.push_str(line);
+            mirror.push('\n');
+        } else {
+            unreachable!();
+        }
+    }
+    mirrors.push(Mirror::new(current_mirror.take().unwrap()));
+    Ok(mirrors.into_iter().map(|x| x.find_smudge_reflection()).sum())
 }
 
 #[cfg(test)]
@@ -142,6 +190,6 @@ mod tests {
     }
     #[test]
     fn p2_test() {
-        assert_eq!(part2(SAMPLE1).unwrap(), 0);
+        assert_eq!(part2(SAMPLE1).unwrap(), 400);
     }
 }
