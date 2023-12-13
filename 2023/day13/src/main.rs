@@ -45,18 +45,18 @@ impl Mirror {
             .map(|index| self.inner.as_bytes()[index] as char)
     }
 
-    fn find_reflection(&self) -> Option<usize> {
+    fn find_first_reflection(&self) -> usize {
         for row in (0..self.rows).collect_vec().windows(2) {
             if self.check_row(row[0], row[1]) {
-                return Some(row[1] * 100);
+                return row[1] * 100;
             }
         }
         for col in (0..self.cols).collect_vec().windows(2) {
             if self.check_col(col[0], col[1]) {
-                return Some(col[1]);
+                return col[1];
             }
         }
-        None
+        unreachable!()
     }
 
     fn find_reflections(&self) -> Vec<usize> {
@@ -75,7 +75,7 @@ impl Mirror {
     }
 
     fn find_smudge_reflection(&self) -> usize {
-        let original_reflection = self.find_reflection().unwrap();
+        let original_reflection = self.find_first_reflection();
         for i in 0..self.inner.len() {
             let mut copy = self.clone();
             let char = copy.inner.as_bytes()[i] as char;
@@ -84,6 +84,9 @@ impl Mirror {
             } else {
                 copy.inner.replace_range(i..=i, "#");
             }
+            // !! Important, need to find ALL reflections and pick one that isnt original.
+            // If you stop at the first reflection it might be the same as the original the second
+            // will never be checked
             for x in copy.find_reflections() {
                 if x != original_reflection {
                     return x;
@@ -96,14 +99,10 @@ impl Mirror {
     fn check_row(&self, row1: usize, row2: usize) -> bool {
         for (r1, r2) in (0..=row1).rev().zip(row2..self.rows) {
             for col in 0..self.cols {
-                match (self.get_char(r1, col), self.get_char(r2, col)) {
-                    (Some(a), Some(b)) => {
-                        if a != b {
-                            return false;
-                        }
+                if let (Some(a), Some(b)) = (self.get_char(r1, col), self.get_char(r2, col)) {
+                    if a != b {
+                        return false;
                     }
-                    (None, None) => return dbg!(true),
-                    _ => return dbg!(true),
                 }
             }
         }
@@ -112,16 +111,9 @@ impl Mirror {
     fn check_col(&self, col1: usize, col2: usize) -> bool {
         for (c1, c2) in (0..=col1).rev().zip(col2..self.cols) {
             for row in 0..self.rows {
-                match (self.get_char(row, c1), self.get_char(row, c2)) {
-                    (Some(a), Some(b)) => {
-                        if a != b {
-                            return false;
-                        }
-                    }
-                    (None, None) => return dbg!(true),
-                    _ => {
-                        dbg!(self);
-                        return true;
+                if let (Some(a), Some(b)) = (self.get_char(row, c1), self.get_char(row, c2)) {
+                    if a != b {
+                        return false;
                     }
                 }
             }
@@ -131,6 +123,11 @@ impl Mirror {
 }
 
 fn part1(input: &str) -> anyhow::Result<usize> {
+    let mirrors = parse_input(input);
+    Ok(mirrors.into_iter().map(|x| x.find_first_reflection()).sum())
+}
+
+fn parse_input(input: &str) -> Vec<Mirror> {
     let mut mirrors = vec![];
     let mut current_mirror = Some(String::new());
     for line in input.lines() {
@@ -145,24 +142,11 @@ fn part1(input: &str) -> anyhow::Result<usize> {
         }
     }
     mirrors.push(Mirror::new(current_mirror.take().unwrap()));
-    Ok(mirrors.into_iter().map(|x| x.find_reflection().unwrap()).sum())
+    mirrors
 }
 
 fn part2(input: &str) -> anyhow::Result<usize> {
-    let mut mirrors = vec![];
-    let mut current_mirror = Some(String::new());
-    for line in input.lines() {
-        if line.is_empty() {
-            mirrors.push(Mirror::new(current_mirror.take().unwrap()));
-            current_mirror = Some(String::new());
-        } else if let Some(mirror) = &mut current_mirror {
-            mirror.push_str(line);
-            mirror.push('\n');
-        } else {
-            unreachable!();
-        }
-    }
-    mirrors.push(Mirror::new(current_mirror.take().unwrap()));
+    let mirrors = parse_input(input);
     Ok(mirrors.into_iter().map(|x| x.find_smudge_reflection()).sum())
 }
 
