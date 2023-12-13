@@ -78,7 +78,6 @@ trait Day10 {
 }
 
 fn part1(input: &str) -> anyhow::Result<usize> {
-    let max_rows = input.lines().count();
     let max_cols = input.lines().next().unwrap().len();
     let input = input.replace('\n', "");
 

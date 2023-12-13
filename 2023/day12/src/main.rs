@@ -22,7 +22,6 @@ fn main() {
     // let input = unfold_line(input);
     let mut split = input.split(' ');
 
-
     let mut puzzle = split.next().unwrap().to_string();
     // End all lines with '.' to fix end cases
     puzzle.push('.');
@@ -36,7 +35,6 @@ fn main() {
     _ = get_solutions(&mut map, &puzzle, &key, 0, 0, 0);
     day12::create_visual_graph(map, puzzle, key);
 }
-
 
 fn part1(input: &str, part1_algo: bool) -> anyhow::Result<usize> {
     if part1_algo {
