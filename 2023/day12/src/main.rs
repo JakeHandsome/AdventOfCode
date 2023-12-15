@@ -273,7 +273,7 @@ mod tests {
     }
     #[test]
     fn p1_testl1() {
-        assert_eq!(solve_line(SAMPLE1.lines().nth(0).unwrap()), 1);
+        assert_eq!(solve_line(SAMPLE1.lines().next().unwrap()), 1);
     }
     #[test]
     fn p1_testl2() {
@@ -297,7 +297,7 @@ mod tests {
     }
     #[test]
     fn p1_2_testl1() {
-        assert_eq!(solve_line2(SAMPLE1.lines().nth(0).unwrap()), 1);
+        assert_eq!(solve_line2(SAMPLE1.lines().next().unwrap()), 1);
     }
     #[test]
     fn p1_2_testl2() {
@@ -325,7 +325,7 @@ mod tests {
     }
     #[test]
     fn p2_testl1() {
-        let a = unfold_line(SAMPLE1.lines().nth(0).unwrap());
+        let a = unfold_line(SAMPLE1.lines().next().unwrap());
         assert_eq!(
             &a,
             "???.###????.###????.###????.###????.### 1,1,3,1,1,3,1,1,3,1,1,3,1,1,3"
