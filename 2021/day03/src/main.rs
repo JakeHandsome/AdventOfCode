@@ -73,12 +73,10 @@ fn find_number(numbers: Vec<&str>, most_common: bool, index: usize) -> usize {
             } else {
                 find_number(ones, most_common, index + 1)
             }
+        } else if most_common {
+            find_number(ones, most_common, index + 1)
         } else {
-            if most_common {
-                find_number(ones, most_common, index + 1)
-            } else {
-                find_number(zeros, most_common, index + 1)
-            }
+            find_number(zeros, most_common, index + 1)
         }
     }
 }
