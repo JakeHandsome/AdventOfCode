@@ -43,6 +43,7 @@ fn part2(input: &str) -> anyhow::Result<usize> {
                 map[box_index].push((label, focal_len));
             }
         } else {
+            // Take a substring without the last character, which will always be '-'
             let label = &x[..=x.len() - 2];
             let box_index = calc_hash(label);
             // Find and remove shifting everything forward
