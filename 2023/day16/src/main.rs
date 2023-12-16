@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use common::*;
 
@@ -49,14 +49,9 @@ impl MirrorMaze {
         }
     }
 
-    fn index_to_row_col(&self, index: usize) -> (usize, usize) {
-        (index / self.cols, index % self.cols)
-    }
-
     #[inline]
     fn get_char(&self, row: isize, col: isize) -> Option<char> {
-        self.index(row as isize, col as isize)
-            .map(|index| self.inner.as_bytes()[index] as char)
+        self.index(row, col).map(|index| self.inner.as_bytes()[index] as char)
     }
 }
 
@@ -64,19 +59,21 @@ fn part1(input: &str) -> anyhow::Result<usize> {
     let maze = MirrorMaze::new(input);
     let mut map = HashSet::new();
     walk_maze(&maze, 0, 0, Direction::Right, &mut map);
-    let unique_locations = map.into_iter().map(|(r, c, _)| (r, c)).collect::<HashSet<_>>();
-
-    Ok(unique_locations.len())
+    // Convert the hashset from row,col,direction to just row,col This will be the total number of unique tiles
+    Ok(map.into_iter().map(|(r, c, _)| (r, c)).collect::<HashSet<_>>().len())
 }
 
+// Walk the maze recursively stopping if this node and direction was already hit
 fn walk_maze(maze: &MirrorMaze, row: isize, col: isize, dir: Direction, map: &mut HashSet<(isize, isize, Direction)>) {
     if map.contains(&(row, col, dir)) {
         // Already been here
         return;
     }
-    if let Some(x) = maze.get_char(row, col) {
+    if let Some(char) = maze.get_char(row, col) {
+        // Mark that we have been here
         map.insert((row, col, dir));
-        match (x, dir) {
+        // This match statement covers all possible reflections
+        match (char, dir) {
             // Keep going same direction
             ('.', _) | ('-', Direction::Left | Direction::Right) | ('|', Direction::Up | Direction::Down) => {
                 let (next_row, next_col) = match dir {
@@ -112,26 +109,32 @@ fn walk_maze(maze: &MirrorMaze, row: isize, col: isize, dir: Direction, map: &mu
 
 fn part2(input: &str) -> anyhow::Result<usize> {
     let maze = MirrorMaze::new(input);
+    // Determine all possible starting possitions and run maze for each of them in parallel finding
+    // the max result
     let mut starting_conditions = vec![];
     for col in 0..maze.cols as isize {
+        // Start at top row moving down for each column
         starting_conditions.push((0, col, Direction::Down));
+        // Bottom row each column moving up
         starting_conditions.push((maze.rows as isize - 1, col, Direction::Up));
     }
     for row in 0..maze.rows as isize {
+        // Left most column for reach row moving right
         starting_conditions.push((row, 0, Direction::Right));
         starting_conditions.push((row, maze.cols as isize - 1, Direction::Left));
     }
-    let sol = starting_conditions
+    Ok(starting_conditions
+        // Parallel not really required heres, changes execution from 250ms to 50ms. I assumed it
+        // would be harder to brute force
         .into_par_iter()
         .map(|(row, col, dir)| {
             let mut map = HashSet::new();
             walk_maze(&maze, row, col, dir, &mut map);
+            // Convert the hashset from row,col,direction to just row,col This will be the total number of unique tiles
             map.into_iter().map(|(r, c, _)| (r, c)).collect::<HashSet<_>>().len()
         })
         .max()
-        .unwrap();
-
-    Ok(sol)
+        .unwrap())
 }
 
 #[cfg(test)]
