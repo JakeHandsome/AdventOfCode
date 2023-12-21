@@ -1,11 +1,10 @@
-use std::{any, collections::HashMap};
+use std::collections::HashMap;
 
 use common::{
     winnow::{
         ascii::{alpha1, dec_uint},
-        combinator::{rest, separated, separated_pair},
-        stream::AsChar,
-        token::{any, one_of, take_till, take_until0, take_until1, take_while},
+        combinator::{separated, separated_pair},
+        token::{one_of, take_until1},
         PResult, Parser,
     },
     *,
@@ -43,7 +42,7 @@ impl<'a> Condition<'a> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 struct Comparison {
     key: char,
     operation: Operation,
@@ -59,25 +58,23 @@ type Part = HashMap<char, usize>;
 
 fn parse_workflow<'a>(input: &mut &'a str) -> PResult<(&'a str, Vec<Condition<'a>>)> {
     let name = take_until1("{").parse_next(input)?;
-    let (_, conditions, _) = ("{", parse_conditions, "}").parse_next(input)?;
+    let (_, conditions, _) = ('{', parse_conditions, '}').parse_next(input)?;
     Ok((name, conditions))
 }
 
 fn parse_conditions<'a>(input: &mut &'a str) -> PResult<Vec<Condition<'a>>> {
-    let conditions: Vec<Condition<'a>> = separated(.., parse_condition, ",").parse_next(input)?;
-    Ok(conditions)
+    separated(.., parse_condition, ",").parse_next(input)
 }
 
 fn parse_condition<'a>(input: &mut &'a str) -> PResult<Condition<'a>> {
     if input.contains(':') {
-        let (comparison, destination) =
-            separated_pair(parse_comparison, ":", take_while(.., AsChar::is_alpha)).parse_next(input)?;
+        let (comparison, destination) = separated_pair(parse_comparison, ':', alpha1).parse_next(input)?;
         Ok(Condition {
             destination,
             comparison: Some(comparison),
         })
     } else {
-        let destination = take_while(.., AsChar::is_alpha).parse_next(input)?;
+        let destination = alpha1.parse_next(input)?;
         Ok(Condition {
             destination,
             comparison: None,
@@ -115,12 +112,12 @@ fn parse_part(input: &mut &str) -> PResult<Part> {
 
 fn parse_part_key_value(a: &mut &str) -> PResult<(char, u32)> {
     // Extract key,value from key=value
-    let a = separated_pair(one_of(['x', 'm', 'a', 's']), "=", dec_uint).parse_next(a)?;
-    Ok(a)
+    separated_pair(one_of(['x', 'm', 'a', 's']), "=", dec_uint).parse_next(a)
 }
 
 trait SolvePart {
     fn rating(&self, workflows: &HashMap<&str, Vec<Condition>>) -> usize;
+    fn rating2(&self, workflows: &HashMap<String, Part2Condition>) -> usize;
 }
 
 impl SolvePart for Part {
@@ -142,11 +139,31 @@ impl SolvePart for Part {
             }
         }
     }
+
+    fn rating2(&self, workflows: &HashMap<String, Part2Condition>) -> usize {
+        let mut current_workflow = START.to_string();
+        loop {
+            let condition = &workflows[&current_workflow];
+            if condition.matches(self) {
+                current_workflow = condition.destination_if_true.clone();
+            } else {
+                current_workflow = condition.destination_else.clone();
+            }
+            if &current_workflow == "A" || &current_workflow == "R" {
+                if &current_workflow == "A" {
+                    return self.values().sum::<usize>();
+                } else {
+                    return 0;
+                }
+            }
+        }
+    }
 }
 
 const START: &str = "in";
 fn part1(input: &str) -> anyhow::Result<usize> {
     let mut workflows = HashMap::new();
+    let mut workflows_remap = HashMap::new();
     let mut parts = vec![];
     let mut empty_hit = false;
     for mut line in &mut input.lines() {
@@ -156,17 +173,47 @@ fn part1(input: &str) -> anyhow::Result<usize> {
                 continue;
             }
             let (key, value) = parse_workflow(&mut line).map_err(|e| anyhow::anyhow!(e))?;
+            let pairs = remap_pt2(key, &value, 0);
             workflows.insert(key, value);
+            for (key, value) in pairs {
+                workflows_remap.insert(key, value);
+            }
         } else {
             let part = parse_part(&mut line).map_err(|e| anyhow::anyhow!(e))?;
             parts.push(part);
         }
     }
+
     let ans = parts
+        .clone()
         .into_iter()
         .fold(0usize, |acc, part| acc + part.rating(&workflows));
+    let ans_remap = parts
+        .into_iter()
+        .fold(0usize, |acc, part| acc + part.rating2(&workflows_remap));
+    // Verify the same logic works for pt1 even with the remap
+    assert_eq!(ans, ans_remap);
     Ok(ans)
 }
+
+#[derive(Debug)]
+struct Part2Condition {
+    key: char,
+    operation: Operation,
+    value: usize,
+    destination_if_true: String,
+    destination_else: String,
+}
+
+impl Part2Condition {
+    fn matches(&self, part: &Part) -> bool {
+        match self.operation {
+            Operation::Greater => part.get(&self.key) > Some(&self.value),
+            Operation::Less => part.get(&self.key) < Some(&self.value),
+        }
+    }
+}
+
 fn part2(input: &str) -> anyhow::Result<usize> {
     let mut workflows = HashMap::new();
     for mut line in &mut input.lines() {
@@ -174,9 +221,92 @@ fn part2(input: &str) -> anyhow::Result<usize> {
             break;
         }
         let (key, value) = parse_workflow(&mut line).map_err(|e| anyhow::anyhow!(e))?;
-        workflows.insert(key, value);
+        // Rework inputs so each map only has a single if/else
+        let pairs = remap_pt2(key, &value, 0);
+        for (key, value) in pairs {
+            workflows.insert(key, value);
+        }
     }
-    Err(AdventOfCodeError::UnimplementedError)?
+    let start_limits = HashMap::from([('x', (1, 4000)), ('m', (1, 4000)), ('a', (1, 4000)), ('s', (1, 4000))]);
+    let results = solve_pt2(&workflows, start_limits, START.to_string());
+    let mut ans = 0;
+    // For each limit calculate product of the valid range of values and sum them up
+    for result in results {
+        let mut values = 1usize;
+        for x in ['x', 'm', 'a', 's'] {
+            if let Some((min, max)) = result.get(&x) {
+                values *= max - min + 1;
+            }
+        }
+        ans += values;
+    }
+    Ok(ans)
+}
+
+/// The idea here is to walk all decisions trees because the hashmap now forms a binary tree. At
+/// each step we calculate the min and max for each key. If the tree ends ins "A" we return those
+/// limits. Otherwise empty is returned.
+fn solve_pt2(
+    workflows: &HashMap<String, Part2Condition>,
+    current_limits: HashMap<char, (usize, usize)>,
+    key: String,
+) -> Vec<HashMap<char, (usize, usize)>> {
+    if key == "R" {
+        vec![]
+    } else if key == "A" {
+        vec![current_limits]
+    } else {
+        let workflow = &workflows[&key];
+        let mut true_limit = current_limits.clone();
+        let mut false_limit = current_limits;
+        if workflow.operation == Operation::Greater {
+            let t = true_limit.get_mut(&workflow.key).unwrap();
+            t.0 = t.0.max(workflow.value + 1);
+            let f = false_limit.get_mut(&workflow.key).unwrap();
+            f.1 = f.1.min(workflow.value);
+        } else {
+            let t = true_limit.get_mut(&workflow.key).unwrap();
+            t.1 = t.1.min(workflow.value - 1);
+            let f = false_limit.get_mut(&workflow.key).unwrap();
+            f.0 = f.0.max(workflow.value);
+        }
+        // Continue down the true and path, updating limits as we go
+        let mut results = solve_pt2(workflows, true_limit, workflow.destination_if_true.clone());
+        results.append(&mut solve_pt2(
+            workflows,
+            false_limit,
+            workflow.destination_else.clone(),
+        ));
+        results
+    }
+}
+
+fn remap_pt2(key: &str, values: &[Condition], depth: usize) -> Vec<(String, Part2Condition)> {
+    if values.len() == 2 {
+        let cond = Part2Condition {
+            key: values[0].comparison.unwrap().key,
+            operation: values[0].comparison.unwrap().operation,
+            value: values[0].comparison.unwrap().value,
+            destination_if_true: values[0].destination.to_string(),
+            destination_else: values[1].destination.to_string(),
+        };
+        let key = key.to_string();
+        vec![(key, cond)]
+    } else {
+        let mut ret = vec![];
+        let mut key = key.to_string();
+        let next = format!("{}{}", key, depth + 1);
+        let cond = Part2Condition {
+            key: values[0].comparison.unwrap().key,
+            operation: values[0].comparison.unwrap().operation,
+            value: values[0].comparison.unwrap().value,
+            destination_if_true: values[0].destination.to_string(),
+            destination_else: next.clone(),
+        };
+        ret.push((key, cond));
+        ret.append(&mut remap_pt2(next.as_str(), &values[1..], depth + 1));
+        ret
+    }
 }
 
 #[cfg(test)]
