@@ -59,6 +59,7 @@ fn part2(input: &str) -> anyhow::Result<usize> {
             sum += box_num * focal_len * (slot + 1);
         }
     }
+
     Ok(sum)
 }
 

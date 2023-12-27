@@ -294,7 +294,7 @@ fn remap_pt2(key: &str, values: &[Condition], depth: usize) -> Vec<(String, Part
         vec![(key, cond)]
     } else {
         let mut ret = vec![];
-        let mut key = key.to_string();
+        let key = key.to_string();
         let next = format!("{}{}", key, depth + 1);
         let cond = Part2Condition {
             key: values[0].comparison.unwrap().key,
