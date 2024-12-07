@@ -74,7 +74,7 @@ fn download_file_if_doesnt_exist(input: &Path) -> anyhow::Result<()> {
         let day = &day[day.len() - 2..].parse::<usize>()?;
         let year = &year[year.len() - 4..];
         // Session token to come from envvar
-        let session = env::var("AOC_SESSION")?;
+        let session = env::var("AOC_SESSION").expect("AOC_SESSION env var not found");
         let client = reqwest::blocking::Client::new();
         let res = client
             .get(format!("https://adventofcode.com/{}/day/{}/input", year, day))

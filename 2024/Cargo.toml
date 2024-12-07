@@ -3,10 +3,10 @@ members = ["day??"]
 
 resolver = "2"
 
+workpace.metadata.crane.name = "aoc2024"
 [workspace.package]
-version = "2023.0.0"
+version = "2024.0.0"
 edition = "2021"
-name = "aoc2023"
 
 
 # Optimize all dependencies even in debug builds (does not affect workspace packages):
