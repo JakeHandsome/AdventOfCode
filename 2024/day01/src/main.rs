@@ -13,7 +13,7 @@ fn main() {
     }
 }
 
-fn part1(input: &str) -> anyhow::Result<usize> {
+fn parse_in(input: &str) -> (Vec<i32>, Vec<i32>) {
     let mut left = vec![];
     let mut right = vec![];
     for line in input.lines() {
@@ -31,35 +31,21 @@ fn part1(input: &str) -> anyhow::Result<usize> {
                 .expect("should parse as a number"),
         );
     }
+    (left, right)
+}
+
+fn part1(input: &str) -> anyhow::Result<usize> {
+    let (mut left, mut right) = parse_in(input);
     left.sort();
     right.sort();
     let pairs = left.into_iter().zip(right);
-    let mut sum = 0;
-    for (l, r) in pairs {
-        sum += abs(l - r);
-    }
+    let sum = pairs.fold(0, |acc, (l, r)| acc + abs(l - r));
 
     Ok(sum as usize)
 }
 
 fn part2(input: &str) -> anyhow::Result<usize> {
-    let mut left = vec![];
-    let mut right = vec![];
-    for line in input.lines() {
-        let mut a = line.split("   ");
-        left.push(
-            a.next()
-                .expect("should be 2 elements")
-                .parse::<i32>()
-                .expect("should parse as a number"),
-        );
-        right.push(
-            a.next()
-                .expect("should be 2 elements")
-                .parse::<i32>()
-                .expect("should parse as a number"),
-        );
-    }
+    let (left, right) = parse_in(input);
     let mut sum = 0;
     for l in left {
         sum += l * right.iter().filter(|r| **r == l).count() as i32;
