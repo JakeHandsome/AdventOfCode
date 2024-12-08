@@ -39,4 +39,9 @@ impl Grid {
         self.index(row as isize, col as isize)
             .map(|index| self.inner.as_bytes()[index] as char)
     }
+    /// Converts and offset into the string to a x/y
+    #[inline]
+    pub fn index_to_row_col(&self, index: usize) -> (usize, usize) {
+        (index / self.cols, index % self.cols)
+    }
 }
