@@ -124,12 +124,13 @@ macro_rules! read_input_file_for_project_as_string {
         common::read_input_as_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("Input.txt"))
     };
 }
+pub mod grid;
 
 pub use anyhow;
+pub use grid::*;
 pub use itertools::Itertools;
 pub use num;
 pub use petgraph;
 pub use rayon::prelude::*;
 pub use regex;
 pub use winnow;
-

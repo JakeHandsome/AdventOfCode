@@ -1,5 +1,3 @@
-use std::isize;
-
 use common::*;
 
 fn main() {
@@ -77,43 +75,9 @@ fn get_diagonal(arr: &[Vec<char>], mut x: usize, mut y: usize) -> String {
     }
 }
 
-#[derive(Debug, Clone)]
-struct Crossword {
-    inner: String,
-    pub rows: usize,
-    pub cols: usize,
-}
-
-impl Crossword {
-    fn new(input: String) -> Self {
-        let cols = input.lines().next().unwrap().len();
-        let rows = input.lines().count();
-        let inner = input.replace('\n', "");
-        Self { inner, rows, cols }
-    }
-}
-
-impl Crossword {
-    #[inline]
-    fn index(&self, row: isize, col: isize) -> Option<usize> {
-        if row < 0 || col < 0 || row >= self.rows as isize || col >= self.cols as isize {
-            None
-        } else {
-            let index = (row * self.cols as isize + col) as usize;
-            debug_assert!(index < self.inner.len(), "{},r{},c{}", index, row, col);
-            Some(index)
-        }
-    }
-    #[inline]
-    fn get_char(&self, row: usize, col: usize) -> Option<char> {
-        self.index(row as isize, col as isize)
-            .map(|index| self.inner.as_bytes()[index] as char)
-    }
-}
-
 fn part2(input: &str) -> anyhow::Result<usize> {
     let mut result = 0;
-    let crossword = Crossword::new(input.to_string());
+    let crossword = Grid::new(input.to_string());
     (0..crossword.rows).for_each(|x| {
         (0..crossword.cols).for_each(|y| {
             if let Some('A') = crossword.get_char(x, y) {
