@@ -1,6 +1,9 @@
-use std::collections::{
-    btree_map::{self, Entry},
-    BTreeMap,
+use std::{
+    cmp::Ordering,
+    collections::{
+        btree_map::{self, Entry},
+        BTreeMap,
+    },
 };
 
 use common::*;
@@ -21,30 +24,10 @@ fn part1(input: &str) -> anyhow::Result<usize> {
     let (printing_rules, page_updates) = parse_input(input);
     let mut result = 0;
 
-    'outer: for update in &page_updates {
-        println!("Testing {update:?}");
-        for (i, number) in update.iter().enumerate() {
-            if let Some(prereqs) = printing_rules.get(number) {
-                // If update contains any prereqs
-                let required_prereqs = prereqs.iter().filter(|&x| update.contains(x)).collect_vec();
-                if !required_prereqs.is_empty() {
-                    println!(
-                        "  {} expects {:?} to be in {:?}",
-                        number,
-                        required_prereqs,
-                        update[..i].iter()
-                    );
-                }
-                if !required_prereqs.iter().all(|x| update[..i].contains(x)) {
-                    continue 'outer;
-                }
-                if !required_prereqs.is_empty() {
-                    println!("  true");
-                }
-            }
+    for update in &page_updates {
+        if check_update(update, &printing_rules) {
+            result += update[(update.len()) / 2];
         }
-        println!("Pass: {update:?}");
-        result += update[(update.len()) / 2];
     }
     Ok(result)
 }
@@ -93,13 +76,7 @@ fn check_update(update: &[usize], printing_rules: &BTreeMap<usize, Vec<usize>>) 
             // If update contains any prereqs
             let required_prereqs = prereqs.iter().filter(|&x| update.contains(x)).collect_vec();
             if !required_prereqs.iter().all(|x| update[..i].contains(x)) {
-                println!(
-                    "{} Expected {:?} in {:?}, remaining {:?}",
-                    number,
-                    required_prereqs,
-                    update[..i].iter(),
-                    update[i..].iter()
-                );
+                //                println!( "{} Expected {:?} in {:?}, remaining {:?}", number, required_prereqs, update[..i].iter(), update[i..].iter());
                 return false;
             }
         }
@@ -117,9 +94,29 @@ fn part2(input: &str) -> anyhow::Result<usize> {
             failing_updates.push(update);
         }
     }
+    for update in &mut failing_updates {
+        update.sort_by(|a, b| {
+            if let Some(others) = printing_rules.get(a) {
+                if others.contains(b) {
+                    return Ordering::Greater;
+                }
+            }
+            if let Some(others) = printing_rules.get(b) {
+                if others.contains(a) {
+                    return Ordering::Less;
+                }
+            }
+            Ordering::Equal
+        });
+    }
 
-    todo!();
-    //result += update[(update.len()) / 2];
+    for update in failing_updates {
+        if !check_update(&update, &printing_rules) {
+            todo!("Oops")
+        }
+        result += update[(update.len()) / 2];
+    }
+
     Ok(result)
 }
 
