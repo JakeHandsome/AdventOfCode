@@ -1,7 +1,7 @@
 use std::{
     cmp::Ordering,
     collections::{
-        btree_map::{self, Entry},
+        btree_map::{Entry},
         BTreeMap,
     },
 };

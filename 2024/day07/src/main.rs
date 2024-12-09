@@ -2,7 +2,6 @@ use std::iter::repeat_n;
 
 use common::*;
 use num::pow::Pow;
-use winnow::combinator::permutation;
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -29,6 +28,7 @@ enum Operator {
 
 impl Equation {
     fn test(&self) -> bool {
+        // In this mask us a bit 0 for add, bit 1 for subtract
         for mask in 0..2.pow(self.operators.len() - 1) {
             let mut index = 0;
             let mut iter = self.operators.iter();
@@ -51,6 +51,8 @@ impl Equation {
         false
     }
     fn test2(&self) -> bool {
+        // cant use binary bits :(
+        // repeat_n(iter,k).multi_cartesian_product will get all permuations with repeats https://docs.rs/itertools/latest/itertools/trait.Itertools.html#method.permutations
         for perm in repeat_n(
             [Operator::Add, Operator::Sub, Operator::Cat].iter(),
             self.operators.len() - 1,
@@ -79,45 +81,38 @@ impl Equation {
     }
 }
 
+fn parse_input(x: &str) -> Equation {
+    let mut a = x.split(':');
+    let test_value = a
+        .next()
+        .expect(": should be input")
+        .parse()
+        .expect("Should be a number");
+    let operators = a
+        .next()
+        .expect("Second half of split")
+        .trim()
+        .split(" ")
+        .map(|x| x.parse().expect("Should be a number"))
+        .collect_vec();
+    Equation { test_value, operators }
+}
 fn part1(input: &str) -> anyhow::Result<usize> {
-    let operators = input.lines().map(|x| {
-        let mut a = x.split(':');
-        let test_value = a
-            .next()
-            .expect(": should be input")
-            .parse()
-            .expect("Should be a number");
-        let operators = a
-            .next()
-            .expect("Second half of split")
-            .trim()
-            .split(" ")
-            .map(|x| x.parse().expect("Should be a number"))
-            .collect_vec();
-        Equation { test_value, operators }
-    });
-
-    Ok(operators.filter(|x| x.test()).map(|x| x.test_value).sum())
+    Ok(input
+        .lines()
+        .map(parse_input)
+        .filter(|x| x.test())
+        .map(|x| x.test_value)
+        .sum())
 }
 
 fn part2(input: &str) -> anyhow::Result<usize> {
-    let operators = input.lines().map(|x| {
-        let mut a = x.split(':');
-        let test_value = a
-            .next()
-            .expect(": should be input")
-            .parse()
-            .expect("Should be a number");
-        let operators = a
-            .next()
-            .expect("Second half of split")
-            .trim()
-            .split(" ")
-            .map(|x| x.parse().expect("Should be a number"))
-            .collect_vec();
-        Equation { test_value, operators }
-    });
-    Ok(operators.filter(|x| x.test2()).map(|x| x.test_value).sum())
+    Ok(input
+        .lines()
+        .map(parse_input)
+        .filter(|x| x.test2())
+        .map(|x| x.test_value)
+        .sum())
 }
 
 #[cfg(test)]
