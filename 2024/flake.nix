@@ -58,7 +58,6 @@
           # Get all the inputs to build our flake
           inputsFrom = [ bin ];
           buildInputs = with pkgs; [ cargo-generate ];
-          RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
         };
       }
     );

@@ -58,7 +58,6 @@
           # Get all the inputs to build our flake
           inputsFrom = [ bin ];
           # buildInputs = with pkgs; [ ];
-          LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
         };
       }
     );
