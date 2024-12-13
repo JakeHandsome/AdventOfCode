@@ -3,7 +3,7 @@ members = ["day??"]
 
 resolver = "2"
 
-workpace.metadata.crane.name = "aoc2024"
+metadata.crane.name = "aoc2024"
 [workspace.package]
 version = "2024.0.0"
 edition = "2021"
