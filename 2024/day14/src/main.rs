@@ -49,26 +49,28 @@ fn part1(input: &str) -> anyhow::Result<usize> {
     Ok(input
         .lines()
         .map(|x| {
-            let mut split = x.split(" ");
-            let position: (isize, isize) = split.next().expect("Should be 1 entry")[2..]
-                .split(',')
-                .map(|x| x.parse::<isize>().expect("Should be a number"))
+            // Convert string into robot
+            // split pos and vel
+            x.split(" ")
+                .map(|s| {
+                    // Trim off the first 2 chars and split , to get x,y as a tuple
+                    s[2..]
+                        .split(',')
+                        .map(|x| x.parse::<isize>().expect("Should be a number"))
+                        .collect_tuple()
+                        .expect("Should be exactly 2 items")
+                })
+                // Collect 2 tuples ((posx,posy),(velx,vely))
                 .collect_tuple()
-                .expect("Should be 2 elements");
-            let velocity: (isize, isize) = split.next().expect("Should be 1 entry")[2..]
-                .split(',')
-                .map(|x| x.parse::<isize>().expect("Should be a number"))
-                .collect_tuple()
-                .expect("Should be 2 elements");
-            Robot {
-                pos: position,
-                vel: velocity,
-            }
+                .map(|(pos, vel)| Robot { pos, vel })
+                .expect("Should parse")
         })
         .map(|mut r| {
+            // Advance robots 100 seconds
             (0..100).for_each(|_| r.step());
             r
         })
+        // Check quadrants
         .map(|r| match (r.pos.0.cmp(&(WIDTH / 2)), r.pos.1.cmp(&(HEIGHT / 2))) {
             (Ordering::Less, Ordering::Less) => [1, 0, 0, 0],
             (Ordering::Less, Ordering::Greater) => [0, 1, 0, 0],
@@ -76,6 +78,7 @@ fn part1(input: &str) -> anyhow::Result<usize> {
             (Ordering::Greater, Ordering::Greater) => [0, 0, 0, 1],
             _ => [0, 0, 0, 0],
         })
+        // Add quadrant counts together
         .fold([0, 0, 0, 0], |mut acc, x| {
             acc[0] += x[0];
             acc[1] += x[1];
@@ -91,21 +94,17 @@ fn part2(input: &str) -> anyhow::Result<usize> {
     let mut robots = input
         .lines()
         .map(|x| {
-            let mut split = x.split(" ");
-            let position: (isize, isize) = split.next().expect("Should be 1 entry")[2..]
-                .split(',')
-                .map(|x| x.parse::<isize>().expect("Should be a number"))
+            x.split(" ")
+                .map(|s| {
+                    s[2..]
+                        .split(',')
+                        .map(|x| x.parse::<isize>().expect("Should be a number"))
+                        .collect_tuple()
+                        .expect("Should be exactly 2 items")
+                })
                 .collect_tuple()
-                .expect("Should be 2 elements");
-            let velocity: (isize, isize) = split.next().expect("Should be 1 entry")[2..]
-                .split(',')
-                .map(|x| x.parse::<isize>().expect("Should be a number"))
-                .collect_tuple()
-                .expect("Should be 2 elements");
-            Robot {
-                pos: position,
-                vel: velocity,
-            }
+                .map(|(pos, vel)| Robot { pos, vel })
+                .expect("Should parse")
         })
         .collect_vec();
     let mut time = 0;
