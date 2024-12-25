@@ -23,10 +23,9 @@ fn part1(input: &str) -> anyhow::Result<usize> {
         .map(|x| x.trim().to_string())
         .enumerate()
         .collect::<BTreeSet<(usize, String)>>();
-    dbg!(&available_towels);
     // Ignore empty line
-    let mut count = 0;
     let _ = lines.next();
+    let mut count = 0;
     for line in lines {
         println!("{}", &line);
         let mut memo = HashMap::new();
@@ -37,7 +36,6 @@ fn part1(input: &str) -> anyhow::Result<usize> {
             println!("  Fail");
         }
     }
-    assert!(count < 397);
     Ok(count)
 }
 
@@ -57,8 +55,6 @@ fn check(
             (index + len) <= line.len() && &line[index..index + len] == t
         })
         .collect_vec();
-    //println!(" current {}", &line[index..]);
-    //println!(" Possible towels {:?}", &possible_towels);
     let mut res = None;
     for (i, t) in possible_towels {
         if res.is_some() {
@@ -80,7 +76,53 @@ fn check(
 }
 
 fn part2(input: &str) -> anyhow::Result<usize> {
-    Err(AdventOfCodeError::UnimplementedError)?
+    let mut lines = input.lines();
+    let available_towels = lines
+        .next()
+        .unwrap()
+        .split(',')
+        .map(|x| x.trim().to_string())
+        .enumerate()
+        .collect::<BTreeSet<(usize, String)>>();
+    // Ignore empty line
+    let _ = lines.next();
+    let mut count = 0;
+    for line in lines {
+        println!("{}", &line);
+        let mut memo = HashMap::new();
+        count += check2(line, 0, &available_towels, &mut memo);
+    }
+    Ok(count)
+}
+
+fn check2(
+    line: &str,
+    index: usize,
+    available_towels: &BTreeSet<(usize, String)>,
+    memo: &mut HashMap<(usize, usize), usize>,
+) -> usize {
+    if index == line.len() {
+        return 1;
+    }
+    let possible_towels = available_towels
+        .iter()
+        .filter(|(_, t)| {
+            let len = t.len();
+            (index + len) <= line.len() && &line[index..index + len] == t
+        })
+        .collect_vec();
+    let mut res = 0;
+    for (i, t) in possible_towels {
+        if memo.contains_key(&(index, *i)) {
+            res += memo.get(&(index, *i)).unwrap().to_owned();
+        } else {
+            let x = check2(line, index + t.len(), available_towels, memo);
+            res += x;
+            memo.insert((index, *i), x);
+        }
+    }
+
+    res
 }
 
 #[cfg(test)]
@@ -102,6 +144,6 @@ bbrgwb"#;
     }
     #[test]
     fn p2_test() {
-        assert_eq!(part2(SAMPLE1).unwrap(), 0);
+        assert_eq!(part2(SAMPLE1).unwrap(), 16);
     }
 }
