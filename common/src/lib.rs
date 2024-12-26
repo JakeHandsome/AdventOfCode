@@ -131,6 +131,7 @@ pub use grid::*;
 pub use itertools::Itertools;
 pub use num;
 pub use petgraph;
+pub use petgraph::prelude::*;
 pub use rayon::prelude::*;
 pub use regex;
 pub use winnow;
