@@ -1,5 +1,7 @@
 // Helper for parsing the text input as a grid
 
+use std::collections::BTreeMap;
+
 /// A grid representation of the input
 #[derive(Debug, Clone)]
 pub struct Grid {
@@ -13,7 +15,11 @@ pub struct Grid {
 
 impl Grid {
     /// Creates a new grid, assumes all rows and cols are same size
-    pub fn new(input: String) -> Self {
+    pub fn new<S>(input: S) -> Self
+    where
+        S: Into<String>,
+    {
+        let input = input.into();
         let cols = input.lines().next().unwrap().len();
         let rows = input.lines().count();
         let inner = input.replace('\n', "");
@@ -43,5 +49,19 @@ impl Grid {
     #[inline]
     pub fn index_to_row_col(&self, index: usize) -> (usize, usize) {
         (index / self.cols, index % self.cols)
+    }
+    pub fn find_char(&self, c: char) -> Option<(usize, usize)> {
+        self.inner.find(c).map(|index| self.index_to_row_col(index))
+    }
+
+    // Assumes all characters are unique
+    pub fn char_positions(&self) -> BTreeMap<char, (usize, usize)> {
+        let mut map = BTreeMap::new();
+        for (i, x) in self.inner.chars().enumerate() {
+            map.insert(x, self.index_to_row_col(i));
+        }
+        // Number of keys should be the same as number of characters
+        assert_eq!(map.keys().len(), self.inner.len());
+        map
     }
 }
