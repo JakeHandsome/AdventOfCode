@@ -1,0 +1,18 @@
+[workspace]
+members = ["day??"]
+
+resolver = "2"
+
+metadata.crane.name = "aoc2025"
+[workspace.package]
+version = "2025.0.0"
+edition = "2024"
+
+
+# Optimize all dependencies even in debug builds (does not affect workspace packages):
+[profile.dev.package."*"]
+opt-level = 2
+
+[workspace.dependencies]
+rayon = "1.8.0"
+common = { path = "../common" }
