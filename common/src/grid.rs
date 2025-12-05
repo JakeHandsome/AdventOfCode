@@ -2,6 +2,8 @@
 
 use std::collections::BTreeMap;
 
+use anyhow::{bail, Error};
+
 /// A grid representation of the input
 #[derive(Debug, Clone)]
 pub struct Grid {
@@ -56,7 +58,7 @@ impl Grid {
         (index / self.cols, index % self.cols)
     }
 
-    pub fn get_adjacent(&self, row: usize, col: usize) -> [Option<char>; 8] {
+    pub fn get_adjacent8(&self, row: usize, col: usize) -> [Option<char>; 8] {
         let r = row as isize;
         let c = col as isize;
         [
@@ -70,11 +72,30 @@ impl Grid {
             self.get_char_signed(r, c - 1),
         ]
     }
+    pub fn get_adjacent4(&self, row: usize, col: usize) -> [Option<char>; 4] {
+        let r = row as isize;
+        let c = col as isize;
+        [
+            self.get_char_signed(r + 1, c),
+            self.get_char_signed(r - 1, c),
+            self.get_char_signed(r, c + 1),
+            self.get_char_signed(r, c - 1),
+        ]
+    }
 
-    pub fn set_char(&mut self, row: usize, col: usize, c: char) {
-        if let Some(index) = self.index(row as isize, col as isize) {
-            let vec = unsafe { self.inner.as_mut_vec() };
-            vec[index] = c as u8;
+    /// Sets a char in the string to a new char, requires string to be ASCII
+    pub fn set_char(&mut self, row: usize, col: usize, c: char) -> anyhow::Result<()> {
+        if self.inner.is_ascii() {
+            if let Some(index) = self.index(row as isize, col as isize) {
+                // SAFETY: String is checked to be ascii
+                let vec = unsafe { self.inner.as_mut_vec() };
+                vec[index] = c as u8;
+                Ok(())
+            } else {
+                bail!("Invalid index to set char")
+            }
+        } else {
+            bail!("Grid is made up of non-ascii chars, cannot replace single char")
         }
     }
 

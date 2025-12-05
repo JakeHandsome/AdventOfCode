@@ -1,4 +1,4 @@
-use common::*;
+use common::{anyhow::Context, *};
 
 fn main() {
     let input = read_input_file_for_project_as_string!();
@@ -13,12 +13,12 @@ fn main() {
 }
 
 fn part1(input: &str) -> anyhow::Result<usize> {
-    let mut grid = Grid::new(input);
+    let grid = Grid::new(input);
     let mut sum = 0;
     for c in 0..grid.cols {
         for r in 0..grid.rows {
             if grid.get_char(r, c) == Some('@') {
-                let adjacent = grid.get_adjacent(r, c);
+                let adjacent = grid.get_adjacent8(r, c);
                 let count = adjacent
                     .into_iter()
                     .map(|x| x.unwrap_or('.'))
@@ -40,14 +40,14 @@ fn part2(input: &str) -> anyhow::Result<usize> {
         for c in 0..grid.cols {
             for r in 0..grid.rows {
                 if grid.get_char(r, c) == Some('@') {
-                    let adjacent = grid.get_adjacent(r, c);
+                    let adjacent = grid.get_adjacent8(r, c);
                     let count = adjacent
                         .into_iter()
                         .map(|x| x.unwrap_or('.'))
                         .fold(0, |acc, x| if x == '@' { acc + 1 } else { acc });
                     if count < 4 {
                         sum += 1;
-                        grid.set_char(r, c, '.');
+                        grid.set_char(r, c, '.').context("String wasn't ascii")?;
                         removed = true;
                     }
                 }
