@@ -147,6 +147,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "day04"
+version = "2025.0.0"
+dependencies = [
+ "common",
+]
+
+[[package]]
 name = "displaydoc"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

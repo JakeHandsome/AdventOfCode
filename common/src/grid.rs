@@ -45,11 +45,39 @@ impl Grid {
         self.index(row as isize, col as isize)
             .map(|index| self.inner.as_bytes()[index] as char)
     }
-    /// Converts and offset into the string to a x/y
+    /// Gets a char from the string
+    #[inline]
+    pub fn get_char_signed(&self, row: isize, col: isize) -> Option<char> {
+        self.index(row, col).map(|index| self.inner.as_bytes()[index] as char)
+    }
+    /// Converts an offset into the string to a x/y
     #[inline]
     pub fn index_to_row_col(&self, index: usize) -> (usize, usize) {
         (index / self.cols, index % self.cols)
     }
+
+    pub fn get_adjacent(&self, row: usize, col: usize) -> [Option<char>; 8] {
+        let r = row as isize;
+        let c = col as isize;
+        [
+            self.get_char_signed(r + 1, c + 1),
+            self.get_char_signed(r + 1, c),
+            self.get_char_signed(r + 1, c - 1),
+            self.get_char_signed(r - 1, c + 1),
+            self.get_char_signed(r - 1, c),
+            self.get_char_signed(r - 1, c - 1),
+            self.get_char_signed(r, c + 1),
+            self.get_char_signed(r, c - 1),
+        ]
+    }
+
+    pub fn set_char(&mut self, row: usize, col: usize, c: char) {
+        if let Some(index) = self.index(row as isize, col as isize) {
+            let vec = unsafe { self.inner.as_mut_vec() };
+            vec[index] = c as u8;
+        }
+    }
+
     pub fn find_char(&self, c: char) -> Option<(usize, usize)> {
         self.inner.find(c).map(|index| self.index_to_row_col(index))
     }
